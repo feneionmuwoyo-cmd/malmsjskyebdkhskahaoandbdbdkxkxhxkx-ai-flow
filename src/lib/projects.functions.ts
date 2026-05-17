@@ -66,9 +66,13 @@ export const updateProjectContent = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
-    const update: Record<string, unknown> = { content: data.content };
-    if (data.title) update.title = data.title;
-    const { error } = await supabase.from("projects").update(update).eq("id", data.id);
+    const { error } = await supabase
+      .from("projects")
+      .update({
+        content: data.content as never,
+        ...(data.title ? { title: data.title } : {}),
+      })
+      .eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
