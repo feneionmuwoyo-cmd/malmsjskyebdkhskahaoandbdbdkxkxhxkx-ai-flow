@@ -13,6 +13,7 @@ const VslSchema = z.object({
   subheadline: z.string(),
   cta: z.string(),
   vslScript: z.array(z.string()),
+  vslVideoUrl: z.string().optional(),
   sections: z.array(z.object({
     type: z.enum(["problem", "solution", "benefits", "social-proof", "offer", "faq", "guarantee", "urgency"]),
     heading: z.string(),
