@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const VSL_SYSTEM_PROMPT = `És um copywriter especialista em VSLs e páginas de vendas de alta conversão.
 Geras conteúdo em português europeu, persuasivo, claro e sem clichés de IA.
-NUNCA uses emojis, ícones decorativos ou caracteres como ✨, 🔥, 💎.
+NUNCA uses emojis, ícones decorativos ou caracteres como sparkles, fogo, diamantes.
 Devolves SEMPRE JSON válido seguindo exatamente a estrutura pedida.`;
 
 const VslSchema = z.object({
@@ -49,7 +49,7 @@ Produto/oferta do utilizador:
 
 ${data.answers ? `Detalhes adicionais:\n${Object.entries(data.answers).map(([k, v]) => `- ${k}: ${v}`).join("\n")}` : ""}
 
-Devolve APENAS um objeto JSON com esta estrutura exata (sem markdown, sem \`\`\`):
+Devolve APENAS um objeto JSON com esta estrutura exata (sem markdown, sem code fences):
 {
   "title": "título curto do projeto",
   "headline": "headline principal poderosa",
@@ -104,6 +104,11 @@ Regras: 6-8 secções, 5-8 FAQs, 3-4 testemunhos realistas, 4-6 parágrafos no v
     return VslSchema.parse(parsed);
   });
 
+const EditResponseSchema = z.object({
+  summary: z.string(),
+  vsl: VslSchema,
+});
+
 export const editVsl = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { current: VslContent; instruction: string }) =>
@@ -128,7 +133,18 @@ export const editVsl = createServerFn({ method: "POST" })
           { role: "system", content: VSL_SYSTEM_PROMPT },
           {
             role: "user",
-            content: `VSL atual (JSON):\n${JSON.stringify(data.current)}\n\nInstrução do utilizador: "${data.instruction}"\n\nDevolve o JSON completo atualizado, com a mesma estrutura. ZERO emojis. Apenas JSON.`,
+            content: `VSL atual (JSON):
+${JSON.stringify(data.current)}
+
+Instrução do utilizador: "${data.instruction}"
+
+Devolve um único objeto JSON com esta estrutura:
+{
+  "summary": "explicação curta em português (1-3 frases) do que mudaste e porquê",
+  "vsl": { ...VSL completo atualizado com a mesma estrutura... }
+}
+
+Regras: ZERO emojis. Apenas JSON. Mantém a estrutura completa do VSL.`,
           },
         ],
         response_format: { type: "json_object" },
@@ -139,5 +155,5 @@ export const editVsl = createServerFn({ method: "POST" })
     const json = await res.json() as { choices?: Array<{ message?: { content?: string } }> };
     const content = json.choices?.[0]?.message?.content;
     if (!content) throw new Error("Resposta vazia da IA");
-    return VslSchema.parse(JSON.parse(content));
+    return EditResponseSchema.parse(JSON.parse(content));
   });

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Plus, Loader2, ArrowUpRight } from "lucide-react";
+import { Plus, Loader2, ArrowUpRight, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/Header";
 import { supabase } from "@/integrations/supabase/client";
@@ -81,28 +81,44 @@ function DashboardPage() {
         ) : (
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {items.map((p) => (
-              <Link
+              <div
                 key={p.id}
-                to="/workspace/$id"
-                params={{ id: p.id }}
                 className="group glass rounded-2xl p-5 transition hover:border-primary/40"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="truncate text-base font-medium">{p.title}</div>
-                    <div className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                      {p.initial_prompt}
+                <Link
+                  to={p.published ? "/preview/$id" : "/workspace/$id"}
+                  params={{ id: p.id }}
+                  className="block"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="truncate text-base font-medium">{p.title}</div>
+                      <div className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                        {p.initial_prompt}
+                      </div>
                     </div>
+                    <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:text-primary" />
                   </div>
-                  <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:text-primary" />
+                  <div className="mt-6 flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{new Date(p.updated_at).toLocaleDateString()}</span>
+                    <span className={p.published ? "text-primary" : ""}>
+                      {p.published ? "Publicado" : "Rascunho"}
+                    </span>
+                  </div>
+                </Link>
+                <div className="mt-4 flex items-center gap-2">
+                  {!p.published && (
+                    <Link to="/workspace/$id" params={{ id: p.id }} className="flex-1">
+                      <Button size="sm" variant="outline" className="w-full">Retomar</Button>
+                    </Link>
+                  )}
+                  <Link to="/preview/$id" params={{ id: p.id }} target="_blank" className={p.published ? "flex-1" : ""}>
+                    <Button size="sm" variant="ghost" className="w-full gap-1">
+                      <ExternalLink className="h-3.5 w-3.5" /> Preview
+                    </Button>
+                  </Link>
                 </div>
-                <div className="mt-6 flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{new Date(p.updated_at).toLocaleDateString()}</span>
-                  <span className={p.published ? "text-primary" : ""}>
-                    {p.published ? "Publicado" : "Rascunho"}
-                  </span>
-                </div>
-              </Link>
+              </div>
             ))}
           </div>
         )}

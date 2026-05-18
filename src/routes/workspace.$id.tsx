@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowUp, Eye, Loader2, Monitor, Smartphone } from "lucide-react";
+import { ArrowUp, Eye, ExternalLink, Loader2, Monitor, Smartphone, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { getProject, updateProjectContent } from "@/lib/projects.functions";
+import { getProject, publishProject, updateProjectContent } from "@/lib/projects.functions";
 import { editVsl, type VslContent } from "@/lib/ai.functions";
 import { VslPreview } from "@/components/VslPreview";
 import { toast } from "sonner";
@@ -22,14 +22,17 @@ function WorkspacePage() {
   const fetchProject = useServerFn(getProject);
   const editFn = useServerFn(editVsl);
   const saveFn = useServerFn(updateProjectContent);
+  const publishFn = useServerFn(publishProject);
 
   const [content, setContent] = useState<VslContent | null>(null);
   const [title, setTitle] = useState("");
+  const [published, setPublished] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMsg[]>([
-    { role: "assistant", content: "A tua VSL está pronta. Diz-me o que queres mudar — cores, headline, urgência, prova social..." },
+    { role: "assistant", content: "A tua VSL está pronta. Diz-me o que queres mudar — cores, headline, urgência, prova social, qualquer secção." },
   ]);
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
   const [editMode, setEditMode] = useState(false);
@@ -49,6 +52,8 @@ function WorkspacePage() {
         if (cancelled) return;
         setContent(proj.content as VslContent);
         setTitle(proj.title);
+        setPublished(!!proj.published);
+        if (proj.published) setEditMode(false);
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Não foi possível abrir o projeto");
       } finally {
@@ -65,20 +70,42 @@ function WorkspacePage() {
   const send = async () => {
     const value = input.trim();
     if (!value || !content || busy) return;
+    if (published) {
+      toast.error("Projeto publicado — não pode ser editado");
+      return;
+    }
     setInput("");
     setMessages((m) => [...m, { role: "user", content: value }]);
     setBusy(true);
     try {
-      const updated = await editFn({ data: { current: content, instruction: value } });
-      setContent(updated);
-      await saveFn({ data: { id, content: updated, title: updated.title } });
-      setMessages((m) => [...m, { role: "assistant", content: "Feito. Vê o preview ao lado." }]);
+      const result = await editFn({ data: { current: content, instruction: value } });
+      setContent(result.vsl);
+      await saveFn({ data: { id, content: result.vsl, title: result.vsl.title } });
+      setMessages((m) => [...m, { role: "assistant", content: result.summary }]);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Erro ao aplicar mudança";
       setMessages((m) => [...m, { role: "assistant", content: msg }]);
       toast.error(msg);
     } finally {
       setBusy(false);
+    }
+  };
+
+  const doPublish = async () => {
+    if (!content || publishing) return;
+    if (!confirm("Atenção: uma vez publicado o projeto não poderá mais ser editado. Continuar?")) return;
+    setPublishing(true);
+    try {
+      // Save latest content first
+      await saveFn({ data: { id, content, title: content.title } });
+      await publishFn({ data: { id } });
+      setPublished(true);
+      setEditMode(false);
+      toast.success("Publicado");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao publicar");
+    } finally {
+      setPublishing(false);
     }
   };
 
@@ -101,10 +128,10 @@ function WorkspacePage() {
   return (
     <div className="flex h-screen w-full flex-col bg-background md:flex-row">
       {/* Chat panel */}
-      <aside className="flex h-1/2 w-full flex-col border-b border-border bg-sidebar md:h-full md:w-[380px] md:border-b-0 md:border-r">
+      <aside className="flex h-[55%] w-full flex-col border-b border-border bg-sidebar md:h-full md:w-[380px] md:border-b-0 md:border-r">
         <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
           <Link to="/dashboard" className="flex items-center gap-2">
-            <img src={logo} alt="feneion" className="h-8 w-auto" />
+            <img src={logo} alt="feneion" className="h-10 w-auto" />
           </Link>
           <div className="truncate text-xs text-muted-foreground">{title}</div>
         </div>
@@ -130,40 +157,46 @@ function WorkspacePage() {
         </div>
 
         <div className="border-t border-border/60 p-3">
-          <div className="glass rounded-2xl p-2">
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  void send();
-                }
-              }}
-              placeholder="deixa mais premium, troca as cores para azul, adiciona urgência..."
-              className="min-h-[60px] w-full resize-none bg-transparent px-2 py-1 text-sm outline-none placeholder:text-muted-foreground/70"
-            />
-            <div className="flex items-center justify-end gap-2 px-1">
-              <Button
-                size="icon"
-                disabled={busy || !input.trim()}
-                onClick={send}
-                className="h-8 w-8 rounded-full bg-gradient-primary text-primary-foreground hover:opacity-90"
-              >
-                <ArrowUp className="h-4 w-4" />
-              </Button>
+          {published ? (
+            <div className="flex items-center gap-2 rounded-2xl border border-border/60 bg-card/60 px-3 py-3 text-xs text-muted-foreground">
+              <Lock className="h-3.5 w-3.5" /> Projeto publicado. Edições bloqueadas.
             </div>
-          </div>
+          ) : (
+            <div className="glass rounded-2xl p-2">
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    void send();
+                  }
+                }}
+                placeholder="deixa mais premium, troca cores para azul, adiciona urgência..."
+                className="min-h-[60px] w-full resize-none bg-transparent px-2 py-1 text-sm outline-none placeholder:text-muted-foreground/70"
+              />
+              <div className="flex items-center justify-end gap-2 px-1">
+                <Button
+                  size="icon"
+                  disabled={busy || !input.trim()}
+                  onClick={send}
+                  className="h-8 w-8 rounded-full bg-gradient-primary text-primary-foreground hover:opacity-90"
+                >
+                  <ArrowUp className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </aside>
 
       {/* Preview */}
-      <section className="flex h-1/2 flex-1 flex-col md:h-full">
-        <div className="flex items-center justify-between border-b border-border/60 bg-card/40 px-4 py-3 backdrop-blur">
+      <section className="flex h-[45%] flex-1 flex-col md:h-full">
+        <div className="flex items-center justify-between gap-2 border-b border-border/60 bg-card/40 px-3 py-3 backdrop-blur">
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <Eye className="mr-1 h-3.5 w-3.5" /> Preview
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <div className="flex items-center rounded-full border border-border bg-background p-0.5">
               <button
                 type="button"
@@ -182,16 +215,28 @@ function WorkspacePage() {
                 <Smartphone className="h-3.5 w-3.5" />
               </button>
             </div>
+            <Link to="/preview/$id" params={{ id }} target="_blank">
+              <Button size="sm" variant="outline" className="gap-1">
+                <ExternalLink className="h-3.5 w-3.5" /> Preview
+              </Button>
+            </Link>
+            {!published && (
+              <Button
+                size="sm"
+                variant={editMode ? "default" : "outline"}
+                onClick={() => setEditMode((v) => !v)}
+                className={editMode ? "bg-primary text-primary-foreground" : ""}
+              >
+                {editMode ? "Sair edição" : "Visual edits"}
+              </Button>
+            )}
             <Button
               size="sm"
-              variant={editMode ? "default" : "outline"}
-              onClick={() => setEditMode((v) => !v)}
-              className={editMode ? "bg-primary text-primary-foreground" : ""}
+              disabled={publishing || published}
+              onClick={doPublish}
+              className="bg-gradient-primary text-primary-foreground hover:opacity-90"
             >
-              {editMode ? "Sair edição" : "Visual edits"}
-            </Button>
-            <Button size="sm" className="bg-gradient-primary text-primary-foreground hover:opacity-90" disabled>
-              Publicar
+              {published ? "Publicado" : publishing ? "A publicar..." : "Publicar"}
             </Button>
           </div>
         </div>
@@ -204,8 +249,9 @@ function WorkspacePage() {
           >
             <VslPreview
               data={content}
-              editable={editMode}
+              editable={editMode && !published}
               onChange={(next) => {
+                if (published) return;
                 setContent(next);
                 if (saveTimer.current) clearTimeout(saveTimer.current);
                 saveTimer.current = setTimeout(() => {
