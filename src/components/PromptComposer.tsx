@@ -1,22 +1,28 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { ArrowUp, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-const SUGGESTIONS = [
-  "Curso de emagrecimento para mulheres acima de 30",
-  "Mentoria de tráfego pago para iniciantes",
-  "E-book de receitas low-carb",
-  "Programa de inglês fluente em 6 meses",
-];
+import { SUGGESTIONS } from "@/data/suggestions";
 
 export function PromptComposer() {
   const [prompt, setPrompt] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [rotation, setRotation] = useState(0);
   const navigate = useNavigate();
+
+  // Roda 4 sugestões diferentes cada 4s
+  useEffect(() => {
+    const t = setInterval(() => setRotation((r) => r + 1), 4000);
+    return () => clearInterval(t);
+  }, []);
+
+  const visible = (() => {
+    const start = (rotation * 4) % SUGGESTIONS.length;
+    return Array.from({ length: 4 }, (_, i) => SUGGESTIONS[(start + i) % SUGGESTIONS.length]);
+  })();
 
   const submit = async () => {
     const value = prompt.trim();
@@ -26,7 +32,6 @@ export function PromptComposer() {
     }
     setSubmitting(true);
 
-    // Save prompt to localStorage so we can pick it up after login
     try {
       sessionStorage.setItem("feneion:pending-prompt", value);
     } catch { /* ignore */ }
@@ -71,14 +76,15 @@ export function PromptComposer() {
       </div>
 
       <div className="mt-5 flex flex-wrap justify-center gap-2">
-        {SUGGESTIONS.map((s) => (
+        {visible.map((s) => (
           <button
-            key={s}
+            key={s.short}
             type="button"
-            onClick={() => setPrompt(s)}
+            onClick={() => setPrompt(s.full)}
+            title="Clica para preencher com a ideia completa"
             className="rounded-full border border-border/60 bg-card/40 px-4 py-2 text-xs text-muted-foreground transition hover:border-primary/40 hover:bg-card hover:text-foreground sm:text-sm"
           >
-            {s}
+            {s.short}
           </button>
         ))}
       </div>

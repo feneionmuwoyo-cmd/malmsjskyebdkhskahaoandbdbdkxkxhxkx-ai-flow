@@ -10,12 +10,16 @@ import { generateVsl } from "@/lib/ai.functions";
 import { createProject } from "@/lib/projects.functions";
 import { toast } from "sonner";
 import logo from "@/assets/feneion-logo.png";
+import { TEMPLATES } from "@/data/templates";
 
 const QUESTIONS = [
-  { key: "audience", label: "Quem é o teu cliente ideal?", placeholder: "Ex: mulheres dos 30-45 anos que querem perder peso" },
+  { key: "name", label: "O teu nome", placeholder: "Como te chamas?" },
+  { key: "business", label: "Nome do negócio ou marca", placeholder: "Ex: Studio Faria, Acme Lda." },
+  { key: "audience", label: "Quem é o teu cliente ideal?", placeholder: "Ex: mulheres 30-45 que querem perder peso" },
   { key: "promise", label: "Qual é a tua grande promessa?", placeholder: "Ex: perder 7kg em 60 dias sem dietas restritivas" },
-  { key: "price", label: "Preço da oferta?", placeholder: "Ex: 197€ em 12x" },
-  { key: "tone", label: "Tom da página (calmo, agressivo, emocional...)?", placeholder: "Ex: emocional com urgência" },
+  { key: "price", label: "Preço da oferta", placeholder: "Ex: 197€ em 12x" },
+  { key: "goal", label: "Objetivo principal da página", placeholder: "Ex: venda direta, agendar call, captar lead" },
+  { key: "tone", label: "Tom da página", placeholder: "Ex: emocional com urgência, premium, técnico" },
 ];
 
 export const Route = createFileRoute("/onboard")({
@@ -41,10 +45,36 @@ function OnboardPage() {
       try {
         const pending = sessionStorage.getItem("feneion:pending-prompt");
         if (pending) setPrompt(pending);
+
+        const templateId = sessionStorage.getItem("feneion:template");
+        if (templateId) {
+          const t = TEMPLATES.find((x) => x.id === templateId);
+          if (t) {
+            // criar diretamente o projecto a partir do template
+            (async () => {
+              try {
+                const project = await createProj({
+                  data: {
+                    prompt: `Template: ${t.name}`,
+                    brief: { template: t.id },
+                    content: t.content,
+                    title: t.content.title,
+                  },
+                });
+                sessionStorage.removeItem("feneion:template");
+                navigate({ to: "/workspace/$id", params: { id: project.id } });
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : "Erro ao criar a partir do template");
+                setAuthChecked(true);
+              }
+            })();
+            return;
+          }
+        }
       } catch { /* ignore */ }
       setAuthChecked(true);
     });
-  }, [navigate]);
+  }, [navigate, createProj]);
 
   const submit = async () => {
     if (!prompt.trim()) {
@@ -81,9 +111,9 @@ function OnboardPage() {
 
   return (
     <div className="relative min-h-screen px-4 py-12">
-      <img src={logo} alt="feneion" className="absolute left-6 top-6 h-12 w-auto md:h-14" />
+      <img src={logo} alt="feneion" className="absolute left-6 top-6 h-16 w-auto md:h-20" />
 
-      <div className="mx-auto mt-16 max-w-2xl">
+      <div className="mx-auto mt-20 max-w-2xl">
         <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
           Algumas perguntas rápidas
         </h1>

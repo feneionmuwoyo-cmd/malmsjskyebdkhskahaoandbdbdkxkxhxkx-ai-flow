@@ -76,7 +76,7 @@ function LoginPage() {
   return (
     <div className="relative flex min-h-screen items-center justify-center px-4 py-12">
       <Link to="/" className="absolute left-6 top-6">
-        <img src={logo} alt="feneion" className="h-12 w-auto md:h-14" />
+        <img src={logo} alt="feneion" className="h-16 w-auto md:h-20" />
       </Link>
 
       <div className="w-full max-w-md">

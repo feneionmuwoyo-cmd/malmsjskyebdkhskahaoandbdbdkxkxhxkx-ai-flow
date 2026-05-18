@@ -66,6 +66,15 @@ export const updateProjectContent = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase } = context;
+    // Block edits if project is already published
+    const { data: existing, error: e1 } = await supabase
+      .from("projects")
+      .select("published")
+      .eq("id", data.id)
+      .single();
+    if (e1) throw new Error(e1.message);
+    if (existing?.published) throw new Error("Projeto publicado — não pode ser editado");
+
     const { error } = await supabase
       .from("projects")
       .update({
@@ -75,4 +84,19 @@ export const updateProjectContent = createServerFn({ method: "POST" })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
+  });
+
+export const publishProject = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    // generate a unique slug from id (first 8 chars) — simple and predictable
+    const slug = data.id.split("-")[0];
+    const { error } = await supabase
+      .from("projects")
+      .update({ published: true, slug })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true, slug };
   });
