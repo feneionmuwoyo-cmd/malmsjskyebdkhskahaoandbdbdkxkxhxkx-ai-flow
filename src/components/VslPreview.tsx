@@ -28,44 +28,44 @@ export function VslPreview({ data, editable = false, onChange }: Props) {
 
   const update = (patch: Partial<VslContent>) => onChange?.({ ...data, ...patch });
 
+  type EditableTag = "span" | "p" | "h1" | "h2" | "h3" | "div";
   const Editable = ({
-    as: As = "span",
+    as = "span",
     value,
     onSave,
     className,
     style,
     multiline = false,
   }: {
-    as?: keyof React.JSX.IntrinsicElements;
+    as?: EditableTag;
     value: string;
     onSave: (v: string) => void;
     className?: string;
     style?: React.CSSProperties;
     multiline?: boolean;
   }) => {
-    const ref = useRef<HTMLElement>(null);
-    const Tag = As as keyof React.JSX.IntrinsicElements;
+    const Tag = as as "span";
     if (!editable) {
       return <Tag className={className} style={style}>{value}</Tag>;
     }
     return (
       <Tag
-        ref={ref as never}
         contentEditable
         suppressContentEditableWarning
         spellCheck={false}
-        onBlur={(e: React.FocusEvent<HTMLElement>) => {
-          const next = multiline ? e.currentTarget.innerText : e.currentTarget.innerText.replace(/\n/g, " ");
+        onBlur={(e) => {
+          const text = (e.currentTarget as HTMLElement).innerText;
+          const next = multiline ? text : text.replace(/\n/g, " ");
           if (next !== value) onSave(next);
         }}
-        onKeyDown={(e: React.KeyboardEvent<HTMLElement>) => {
+        onKeyDown={(e) => {
           if (!multiline && e.key === "Enter") {
             e.preventDefault();
             (e.currentTarget as HTMLElement).blur();
           }
         }}
-        className={`${className ?? ""} ${editable ? "outline-none rounded-md ring-offset-2 hover:ring-2 hover:ring-[color:var(--ed-accent)]/40 focus:ring-2 focus:ring-[color:var(--ed-accent)]" : ""}`}
-        style={{ ...(style ?? {}), ...(editable ? { ["--ed-accent" as never]: accent } : {}) }}
+        className={`${className ?? ""} outline-none rounded-md hover:ring-2 hover:ring-[color:var(--ed-accent)]/40 focus:ring-2 focus:ring-[color:var(--ed-accent)]`}
+        style={{ ...(style ?? {}), ["--ed-accent" as never]: accent }}
       >
         {value}
       </Tag>
