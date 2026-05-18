@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import type * as React from "react";
 import type { VslContent } from "@/lib/ai.functions";
 import { ArrowRight, Check, ShieldCheck, Clock, ArrowUp, ArrowDown, Trash2, Play } from "lucide-react";
 
