@@ -182,8 +182,13 @@ function WorkspacePage() {
                 <Smartphone className="h-3.5 w-3.5" />
               </button>
             </div>
-            <Button size="sm" variant="outline" disabled>
-              Visual edits
+            <Button
+              size="sm"
+              variant={editMode ? "default" : "outline"}
+              onClick={() => setEditMode((v) => !v)}
+              className={editMode ? "bg-primary text-primary-foreground" : ""}
+            >
+              {editMode ? "Sair edição" : "Visual edits"}
             </Button>
             <Button size="sm" className="bg-gradient-primary text-primary-foreground hover:opacity-90" disabled>
               Publicar
@@ -197,7 +202,17 @@ function WorkspacePage() {
               device === "mobile" ? "max-w-[390px]" : "max-w-full"
             }`}
           >
-            <VslPreview data={content} />
+            <VslPreview
+              data={content}
+              editable={editMode}
+              onChange={(next) => {
+                setContent(next);
+                if (saveTimer.current) clearTimeout(saveTimer.current);
+                saveTimer.current = setTimeout(() => {
+                  void saveFn({ data: { id, content: next, title: next.title } });
+                }, 600);
+              }}
+            />
           </div>
         </div>
       </section>
