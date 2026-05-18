@@ -32,7 +32,9 @@ function WorkspacePage() {
     { role: "assistant", content: "A tua VSL está pronta. Diz-me o que queres mudar — cores, headline, urgência, prova social..." },
   ]);
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
+  const [editMode, setEditMode] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     let cancelled = false;
