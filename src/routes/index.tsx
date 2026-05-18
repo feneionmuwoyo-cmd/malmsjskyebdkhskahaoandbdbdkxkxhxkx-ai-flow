@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Header } from "@/components/Header";
 import { PromptComposer } from "@/components/PromptComposer";
+import { TemplateGallery } from "@/components/TemplateGallery";
+import { LandingFeatures } from "@/components/LandingFeatures";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -27,7 +29,7 @@ function LandingPage() {
       <Header />
 
       <main className="relative">
-        <section className="mx-auto flex min-h-[calc(100vh-6rem)] max-w-6xl flex-col items-center justify-center px-4 py-16 text-center sm:px-6">
+        <section className="mx-auto flex min-h-[calc(100vh-7rem)] max-w-6xl flex-col items-center justify-center px-4 py-16 text-center sm:px-6">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
             <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-glow" />
             VSLs e landing pages em segundos
@@ -60,6 +62,13 @@ function LandingPage() {
             <span>Publicação instantânea</span>
           </div>
         </section>
+
+        <TemplateGallery />
+        <LandingFeatures />
+
+        <footer className="border-t border-border/40 px-4 py-10 text-center text-xs text-muted-foreground">
+          © {new Date().getFullYear()} feneion · Construído para criadores que vendem
+        </footer>
       </main>
     </div>
   );

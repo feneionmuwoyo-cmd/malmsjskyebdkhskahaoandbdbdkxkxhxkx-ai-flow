@@ -9,12 +9,12 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 w-full">
       <div className="glass">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 md:h-24">
+        <div className="mx-auto flex h-24 max-w-7xl items-center justify-between px-4 sm:px-6 md:h-28">
           <Link to="/" className="flex items-center">
             <img
               src={logo}
               alt="feneion"
-              className="h-12 w-auto md:h-16"
+              className="h-20 w-auto md:h-24"
               draggable={false}
             />
           </Link>
