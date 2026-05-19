@@ -26,17 +26,17 @@ export function Header() {
                   <Button variant="ghost" size="sm">Dashboard</Button>
                 </Link>
                 <Button variant="outline" size="sm" onClick={signOut}>
-                  Sign out
+                  Sair
                 </Button>
               </>
             ) : (
               <>
                 <Link to="/login">
-                  <Button variant="ghost" size="sm">Sign in</Button>
+                  <Button variant="ghost" size="sm">Entrar</Button>
                 </Link>
-                <Link to="/login">
+                <Link to="/login" search={{ redirect: "/onboard" }}>
                   <Button size="sm" className="bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow">
-                    Get started
+                    Criar conta
                   </Button>
                 </Link>
               </>
