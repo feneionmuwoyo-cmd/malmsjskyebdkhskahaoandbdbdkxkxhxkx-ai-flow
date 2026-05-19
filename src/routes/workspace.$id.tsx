@@ -165,8 +165,9 @@ function WorkspacePage() {
             </div>
           ))}
           {busy && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" /> A pensar...
+            <div className="flex items-center gap-2 rounded-2xl bg-card/60 px-3 py-2 text-xs text-muted-foreground">
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+              <span>{thinking ?? "A pensar..."}</span>
             </div>
           )}
         </div>
