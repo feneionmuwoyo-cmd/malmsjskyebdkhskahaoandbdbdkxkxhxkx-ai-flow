@@ -34,6 +34,7 @@ function WorkspacePage() {
   const [messages, setMessages] = useState<ChatMsg[]>([
     { role: "assistant", content: "A tua VSL está pronta. Diz-me o que queres mudar — cores, headline, urgência, prova social, qualquer secção." },
   ]);
+  const [thinking, setThinking] = useState<string | null>(null);
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
   const [editMode, setEditMode] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -77,6 +78,18 @@ function WorkspacePage() {
     setInput("");
     setMessages((m) => [...m, { role: "user", content: value }]);
     setBusy(true);
+    const steps = [
+      "A analisar o teu pedido...",
+      "A rever a estrutura da VSL...",
+      "A reescrever as secções afetadas...",
+      "A guardar as alterações...",
+    ];
+    let stepIdx = 0;
+    setThinking(steps[0]);
+    const stepTimer = setInterval(() => {
+      stepIdx = Math.min(stepIdx + 1, steps.length - 1);
+      setThinking(steps[stepIdx]);
+    }, 1200);
     try {
       const result = await editFn({ data: { current: content, instruction: value } });
       setContent(result.vsl);
@@ -87,6 +100,8 @@ function WorkspacePage() {
       setMessages((m) => [...m, { role: "assistant", content: msg }]);
       toast.error(msg);
     } finally {
+      clearInterval(stepTimer);
+      setThinking(null);
       setBusy(false);
     }
   };
@@ -150,8 +165,9 @@ function WorkspacePage() {
             </div>
           ))}
           {busy && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" /> A pensar...
+            <div className="flex items-center gap-2 rounded-2xl bg-card/60 px-3 py-2 text-xs text-muted-foreground">
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+              <span>{thinking ?? "A pensar..."}</span>
             </div>
           )}
         </div>
