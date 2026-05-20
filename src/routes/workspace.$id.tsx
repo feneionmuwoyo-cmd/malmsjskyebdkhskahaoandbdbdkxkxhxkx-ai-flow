@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowUp, Eye, ExternalLink, Loader2, Monitor, Smartphone, Lock } from "lucide-react";
+import { ArrowUp, Eye, ExternalLink, Loader2, Monitor, Smartphone, Lock, PanelRightOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { getProject, publishProject, updateProjectContent } from "@/lib/projects.functions";
 import { editVsl, type VslContent } from "@/lib/ai.functions";
@@ -37,6 +38,7 @@ function WorkspacePage() {
   const [thinking, setThinking] = useState<string | null>(null);
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
   const [editMode, setEditMode] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -111,7 +113,6 @@ function WorkspacePage() {
     if (!confirm("Atenção: uma vez publicado o projeto não poderá mais ser editado. Continuar?")) return;
     setPublishing(true);
     try {
-      // Save latest content first
       await saveFn({ data: { id, content, title: content.title } });
       await publishFn({ data: { id } });
       setPublished(true);
@@ -140,15 +141,99 @@ function WorkspacePage() {
     );
   }
 
-  return (
-    <div className="flex h-screen w-full flex-col bg-background md:flex-row">
-      {/* Chat panel */}
-      <aside className="flex h-[55%] w-full flex-col border-b border-border bg-sidebar md:h-full md:w-[380px] md:border-b-0 md:border-r">
-        <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
-          <Link to="/dashboard" className="flex items-center gap-2">
-            <img src={logo} alt="feneion" className="h-10 w-auto" />
+  const previewArea = (
+    <div className="flex h-full flex-col">
+      <div className="flex items-center justify-between gap-2 border-b border-border/60 bg-card/40 px-3 py-3 backdrop-blur">
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <Eye className="mr-1 h-3.5 w-3.5" /> Preview
+        </div>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <div className="flex items-center rounded-full border border-border bg-background p-0.5">
+            <button
+              type="button"
+              onClick={() => setDevice("desktop")}
+              className={`flex h-7 w-8 items-center justify-center rounded-full ${device === "desktop" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+              aria-label="Desktop"
+            >
+              <Monitor className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setDevice("mobile")}
+              className={`flex h-7 w-8 items-center justify-center rounded-full ${device === "mobile" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+              aria-label="Mobile"
+            >
+              <Smartphone className="h-3.5 w-3.5" />
+            </button>
+          </div>
+          <Link to="/preview/$id" params={{ id }} target="_blank">
+            <Button size="sm" variant="outline" className="gap-1">
+              <ExternalLink className="h-3.5 w-3.5" /> Abrir
+            </Button>
           </Link>
-          <div className="truncate text-xs text-muted-foreground">{title}</div>
+          {!published && (
+            <Button
+              size="sm"
+              variant={editMode ? "default" : "outline"}
+              onClick={() => setEditMode((v) => !v)}
+              className={editMode ? "bg-primary text-primary-foreground" : ""}
+            >
+              {editMode ? "Sair edição" : "Visual edits"}
+            </Button>
+          )}
+          <Button
+            size="sm"
+            disabled={publishing || published}
+            onClick={doPublish}
+            className="bg-gradient-primary text-primary-foreground hover:opacity-90"
+          >
+            {published ? "Publicado" : publishing ? "A publicar..." : "Publicar"}
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto bg-[oklch(0.10_0.012_250)] p-4">
+        <div
+          className={`mx-auto overflow-hidden rounded-xl shadow-elegant transition-all ${
+            device === "mobile" ? "max-w-[390px]" : "max-w-full"
+          }`}
+        >
+          <VslPreview
+            data={content}
+            editable={editMode && !published}
+            onChange={(next) => {
+              if (published) return;
+              setContent(next);
+              if (saveTimer.current) clearTimeout(saveTimer.current);
+              saveTimer.current = setTimeout(() => {
+                void saveFn({ data: { id, content: next, title: next.title } });
+              }, 600);
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="flex h-screen w-full overflow-hidden bg-background">
+      {/* Chat panel — sempre full height, sem nada por baixo em mobile */}
+      <aside className="flex h-full w-full flex-col border-border bg-sidebar md:w-[380px] md:border-r">
+        <div className="flex items-center justify-between gap-2 border-b border-border/60 px-4 py-3">
+          <Link to="/dashboard" className="flex items-center gap-2">
+            <img src={logo} alt="feneion" className="h-9 w-auto" />
+          </Link>
+          <div className="flex items-center gap-2">
+            <div className="hidden truncate text-xs text-muted-foreground sm:block">{title}</div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1 md:hidden"
+              onClick={() => setPreviewOpen(true)}
+            >
+              <PanelRightOpen className="h-3.5 w-3.5" /> Preview
+            </Button>
+          </div>
         </div>
 
         <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
@@ -206,78 +291,19 @@ function WorkspacePage() {
         </div>
       </aside>
 
-      {/* Preview */}
-      <section className="flex h-[45%] flex-1 flex-col md:h-full">
-        <div className="flex items-center justify-between gap-2 border-b border-border/60 bg-card/40 px-3 py-3 backdrop-blur">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Eye className="mr-1 h-3.5 w-3.5" /> Preview
-          </div>
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <div className="flex items-center rounded-full border border-border bg-background p-0.5">
-              <button
-                type="button"
-                onClick={() => setDevice("desktop")}
-                className={`flex h-7 w-8 items-center justify-center rounded-full ${device === "desktop" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-                aria-label="Desktop"
-              >
-                <Monitor className="h-3.5 w-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setDevice("mobile")}
-                className={`flex h-7 w-8 items-center justify-center rounded-full ${device === "mobile" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-                aria-label="Mobile"
-              >
-                <Smartphone className="h-3.5 w-3.5" />
-              </button>
-            </div>
-            <Link to="/preview/$id" params={{ id }} target="_blank">
-              <Button size="sm" variant="outline" className="gap-1">
-                <ExternalLink className="h-3.5 w-3.5" /> Preview
-              </Button>
-            </Link>
-            {!published && (
-              <Button
-                size="sm"
-                variant={editMode ? "default" : "outline"}
-                onClick={() => setEditMode((v) => !v)}
-                className={editMode ? "bg-primary text-primary-foreground" : ""}
-              >
-                {editMode ? "Sair edição" : "Visual edits"}
-              </Button>
-            )}
-            <Button
-              size="sm"
-              disabled={publishing || published}
-              onClick={doPublish}
-              className="bg-gradient-primary text-primary-foreground hover:opacity-90"
-            >
-              {published ? "Publicado" : publishing ? "A publicar..." : "Publicar"}
-            </Button>
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto bg-[#0b0d10] p-4">
-          <div
-            className={`mx-auto overflow-hidden rounded-xl shadow-elegant transition-all ${
-              device === "mobile" ? "max-w-[390px]" : "max-w-full"
-            }`}
-          >
-            <VslPreview
-              data={content}
-              editable={editMode && !published}
-              onChange={(next) => {
-                if (published) return;
-                setContent(next);
-                if (saveTimer.current) clearTimeout(saveTimer.current);
-                saveTimer.current = setTimeout(() => {
-                  void saveFn({ data: { id, content: next, title: next.title } });
-                }, 600);
-              }}
-            />
-          </div>
-        </div>
+      {/* Preview — em desktop ocupa o restante; em mobile abre como Sheet */}
+      <section className="hidden flex-1 md:flex md:flex-col">
+        {previewArea}
       </section>
+
+      <Sheet open={previewOpen} onOpenChange={setPreviewOpen}>
+        <SheetContent side="right" className="w-full p-0 sm:max-w-full">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Preview</SheetTitle>
+          </SheetHeader>
+          <div className="h-full">{previewArea}</div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

@@ -1,9 +1,9 @@
-import { Sparkles, MousePointerClick, Rocket, ShieldCheck, Layers, Wand2 } from "lucide-react";
+import { Bot, MousePointerClick, Rocket, ShieldCheck, Layers, MessageSquare } from "lucide-react";
 
 const FEATURES = [
-  { icon: Sparkles, title: "Geração com IA", body: "Descreve o produto e recebe headline, copy, VSL, secções e estilo prontos." },
+  { icon: Bot, title: "Geração com IA", body: "Descreve o produto e recebe headline, copy, VSL, secções e estilo prontos." },
   { icon: MousePointerClick, title: "Editor visual", body: "Clica em qualquer elemento e edita texto, cores, vídeo e ordem sem código." },
-  { icon: Wand2, title: "Chat para refinar", body: "Pede mudanças em linguagem natural — a IA aplica e explica o que mudou." },
+  { icon: MessageSquare, title: "Chat para refinar", body: "Pede mudanças em linguagem natural — a IA aplica e explica o que mudou." },
   { icon: Layers, title: "Templates testados", body: "Modelos prontos para infoprodutos, e-commerce, SaaS e consultoria." },
   { icon: Rocket, title: "Publicação instantânea", body: "Um clique e a página fica online no nosso domínio rápido e seguro." },
   { icon: ShieldCheck, title: "Bloqueio após publicar", body: "Quando publicas, a página fica protegida — garantia de versão final." },

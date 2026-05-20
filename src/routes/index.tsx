@@ -30,10 +30,6 @@ function LandingPage() {
 
       <main className="relative">
         <section className="mx-auto flex min-h-[calc(100vh-7rem)] max-w-6xl flex-col items-center justify-center px-4 py-16 text-center sm:px-6">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-glow" />
-            VSLs e landing pages em segundos
-          </div>
 
           <h1 className="max-w-4xl text-balance text-4xl font-semibold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
             Cria a tua{" "}
