@@ -1,128 +1,123 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
-import { Plus, Loader2, ArrowUpRight, ExternalLink } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { ArrowUp, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Header } from "@/components/Header";
+import { Textarea } from "@/components/ui/textarea";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
 import { supabase } from "@/integrations/supabase/client";
-import { listProjects } from "@/lib/projects.functions";
+import { toast } from "sonner";
+import { SUGGESTIONS } from "@/data/suggestions";
 
 export const Route = createFileRoute("/dashboard")({
   component: DashboardPage,
 });
 
-type Project = {
-  id: string;
-  title: string;
-  initial_prompt: string | null;
-  published: boolean;
-  slug: string | null;
-  updated_at: string;
-};
-
 function DashboardPage() {
   const navigate = useNavigate();
-  const fetchList = useServerFn(listProjects);
-  const [items, setItems] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [prompt, setPrompt] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [rotation, setRotation] = useState(0);
 
   useEffect(() => {
-    let cancel = false;
-    (async () => {
-      const { data } = await supabase.auth.getSession();
+    supabase.auth.getSession().then(({ data }) => {
       if (!data.session) {
         navigate({ to: "/login", search: { redirect: "/dashboard" } });
         return;
       }
-      try {
-        const list = await fetchList();
-        if (!cancel) setItems(list as Project[]);
-      } finally {
-        if (!cancel) setLoading(false);
-      }
-    })();
-    return () => { cancel = true; };
-  }, [navigate, fetchList]);
+      setAuthChecked(true);
+    });
+  }, [navigate]);
+
+  useEffect(() => {
+    const t = setInterval(() => setRotation((r) => r + 1), 4000);
+    return () => clearInterval(t);
+  }, []);
+
+  const visible = (() => {
+    const start = (rotation * 4) % SUGGESTIONS.length;
+    return Array.from({ length: 4 }, (_, i) => SUGGESTIONS[(start + i) % SUGGESTIONS.length]);
+  })();
+
+  const submit = async () => {
+    const value = prompt.trim();
+    if (!value) {
+      toast.error("Descreve o que queres vender");
+      return;
+    }
+    setSubmitting(true);
+    try { sessionStorage.setItem("feneion:pending-prompt", value); } catch { /* ignore */ }
+    navigate({ to: "/onboard" });
+  };
+
+  if (!authChecked) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen">
-      <Header />
-      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">Os teus funis</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Cria, edita e publica VSLs e landing pages.
-            </p>
-          </div>
-          <Link to="/onboard">
-            <Button className="bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow">
-              <Plus className="mr-2 h-4 w-4" /> Nova VSL
-            </Button>
-          </Link>
-        </div>
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+        <AppSidebar />
+        <div className="flex-1">
+          <header className="flex h-12 items-center border-b border-border/60 px-4">
+            <SidebarTrigger />
+          </header>
 
-        {loading ? (
-          <div className="mt-16 flex justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : items.length === 0 ? (
-          <div className="mt-16 rounded-3xl border border-dashed border-border/80 bg-card/40 p-12 text-center">
-            <h2 className="text-lg font-semibold">Ainda não tens projetos</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Começa por descrever o teu produto à IA.
+          <main className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-3xl flex-col items-center justify-center px-4 py-12">
+            <h1 className="text-center text-4xl font-semibold tracking-tight md:text-5xl">
+              O que vais criar hoje?
+            </h1>
+            <p className="mt-3 text-center text-sm text-muted-foreground md:text-base">
+              Descreve o teu produto. A IA gera a tua VSL em segundos.
             </p>
-            <Link to="/onboard">
-              <Button className="mt-6 bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow">
-                <Plus className="mr-2 h-4 w-4" /> Criar primeira VSL
-              </Button>
-            </Link>
-          </div>
-        ) : (
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {items.map((p) => (
-              <div
-                key={p.id}
-                className="group glass rounded-2xl p-5 transition hover:border-primary/40"
-              >
-                <Link
-                  to={p.published ? "/preview/$id" : "/workspace/$id"}
-                  params={{ id: p.id }}
-                  className="block"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="truncate text-base font-medium">{p.title}</div>
-                      <div className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                        {p.initial_prompt}
-                      </div>
-                    </div>
-                    <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:text-primary" />
-                  </div>
-                  <div className="mt-6 flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{new Date(p.updated_at).toLocaleDateString()}</span>
-                    <span className={p.published ? "text-primary" : ""}>
-                      {p.published ? "Publicado" : "Rascunho"}
-                    </span>
-                  </div>
-                </Link>
-                <div className="mt-4 flex items-center gap-2">
-                  {!p.published && (
-                    <Link to="/workspace/$id" params={{ id: p.id }} className="flex-1">
-                      <Button size="sm" variant="outline" className="w-full">Retomar</Button>
-                    </Link>
-                  )}
-                  <Link to="/preview/$id" params={{ id: p.id }} target="_blank" className={p.published ? "flex-1" : ""}>
-                    <Button size="sm" variant="ghost" className="w-full gap-1">
-                      <ExternalLink className="h-3.5 w-3.5" /> Preview
-                    </Button>
-                  </Link>
+
+            <div className="mt-10 w-full">
+              <div className="glass rounded-3xl p-3 shadow-elegant">
+                <Textarea
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                      e.preventDefault();
+                      void submit();
+                    }
+                  }}
+                  placeholder="Quero vender um curso de emagrecimento para mulheres acima de 30 anos..."
+                  className="min-h-[120px] resize-none border-0 bg-transparent text-base placeholder:text-muted-foreground/70 focus-visible:ring-0 md:text-lg"
+                />
+                <div className="flex items-center justify-end gap-2 px-2 pb-1 pt-2">
+                  <Button
+                    onClick={submit}
+                    disabled={submitting}
+                    size="icon"
+                    className="h-10 w-10 rounded-full bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow"
+                  >
+                    <ArrowUp className="h-5 w-5" />
+                  </Button>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </main>
-    </div>
+
+              <div className="mt-5 flex flex-wrap justify-center gap-2">
+                {visible.map((s) => (
+                  <button
+                    key={s.short}
+                    type="button"
+                    onClick={() => setPrompt(s.full)}
+                    className="rounded-full border border-border/60 bg-card/40 px-4 py-2 text-xs text-muted-foreground transition hover:border-primary/40 hover:bg-card hover:text-foreground sm:text-sm"
+                  >
+                    {s.short}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 }
