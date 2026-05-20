@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowUp, Sparkles } from "lucide-react";
+import { ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
@@ -60,9 +60,8 @@ export function PromptComposer() {
           className="min-h-[120px] resize-none border-0 bg-transparent text-base placeholder:text-muted-foreground/70 focus-visible:ring-0 md:text-lg"
         />
         <div className="flex items-center justify-between gap-2 px-2 pb-1 pt-2">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
-            <span className="hidden sm:inline">Powered by AI · pressiona ⌘ + Enter</span>
+          <div className="hidden text-xs text-muted-foreground sm:block">
+            Pressiona ⌘ + Enter para enviar
           </div>
           <Button
             onClick={submit}
