@@ -1,0 +1,25 @@
+# feneion
+
+> feneion é uma plataforma alimentada por IA para criar VSLs (Video Sales Letters) e páginas de vendas de alta conversão em segundos. Os utilizadores descrevem o seu produto e a IA gera headline, copy, estrutura, estilo visual e checkout — tudo pronto a publicar.
+
+## Como funciona
+
+- O utilizador escreve um prompt no dashboard descrevendo o produto/oferta.
+- A IA gera uma página VSL completa: headline, subheadline, script de vídeo, secções de copy, FAQ, testemunhos e CTA.
+- O utilizador edita visualmente (clicar em qualquer texto) ou via chat com a IA.
+- Publicação gera URL público partilhável.
+
+## Funcionalidades principais
+
+- Geração de VSL e landing pages por IA em português
+- Editor visual no-code com edição em tempo real
+- Chat IA para iterar a página
+- Upload de vídeos (galeria, YouTube, Google Drive)
+- Pagamento Express em Kwanzas (Angola)
+- Templates Quiz → VSL → Checkout
+
+## Páginas
+
+- [Início](https://malmsjskyebdkhskahaoandbdbdkxkxhxkx-ai-flow.lovable.app/): Landing principal com explicação do produto e prompt inicial.
+- [Login / Criar conta](https://malmsjskyebdkhskahaoandbdbdkxkxhxkx-ai-flow.lovable.app/login): Autenticação por email e senha.
+- [Dashboard](https://malmsjskyebdkhskahaoandbdbdkxkxhxkx-ai-flow.lovable.app/dashboard): Espaço de trabalho do utilizador autenticado.

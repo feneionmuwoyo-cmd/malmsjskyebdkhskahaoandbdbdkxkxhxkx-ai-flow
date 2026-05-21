@@ -10,6 +10,15 @@ import { toast } from "sonner";
 import { SUGGESTIONS } from "@/data/suggestions";
 
 export const Route = createFileRoute("/dashboard")({
+  head: () => ({
+    meta: [
+      { title: "Dashboard — feneion" },
+      { name: "description", content: "O teu espaço de trabalho. Cria novas VSLs e gere os teus projetos." },
+      { property: "og:title", content: "Dashboard — feneion" },
+      { property: "og:description", content: "O teu espaço de trabalho feneion." },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
   component: DashboardPage,
 });
 

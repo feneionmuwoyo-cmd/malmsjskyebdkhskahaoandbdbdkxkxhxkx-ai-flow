@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://malmsjskyebdkhskahaoandbdbdkxkxhxkx-ai-flow.lovable.app/sitemap.xml

@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowUp, Eye, ExternalLink, Loader2, Monitor, Smartphone, Lock, PanelRightOpen } from "lucide-react";
+import { ArrowUp, Eye, ExternalLink, Loader2, Monitor, Smartphone, Lock, PanelRightOpen, ArrowLeft, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
-import { getProject, publishProject, updateProjectContent } from "@/lib/projects.functions";
+import { getProject, publishProject, updateProjectContent, revertLastVersion, hasVersions } from "@/lib/projects.functions";
 import { editVsl, type VslContent } from "@/lib/ai.functions";
 import { VslPreview } from "@/components/VslPreview";
 import { toast } from "sonner";
@@ -24,6 +24,8 @@ function WorkspacePage() {
   const editFn = useServerFn(editVsl);
   const saveFn = useServerFn(updateProjectContent);
   const publishFn = useServerFn(publishProject);
+  const revertFn = useServerFn(revertLastVersion);
+  const versionsFn = useServerFn(hasVersions);
 
   const [content, setContent] = useState<VslContent | null>(null);
   const [title, setTitle] = useState("");
@@ -39,6 +41,8 @@ function WorkspacePage() {
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
   const [editMode, setEditMode] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [versionCount, setVersionCount] = useState(0);
+  const [reverting, setReverting] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -57,6 +61,10 @@ function WorkspacePage() {
         setTitle(proj.title);
         setPublished(!!proj.published);
         if (proj.published) setEditMode(false);
+        try {
+          const v = await versionsFn({ data: { id } });
+          if (!cancelled) setVersionCount(v.count);
+        } catch { /* ignore */ }
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Não foi possível abrir o projeto");
       } finally {
@@ -64,7 +72,7 @@ function WorkspacePage() {
       }
     })();
     return () => { cancelled = true; };
-  }, [id, navigate, fetchProject]);
+  }, [id, navigate, fetchProject, versionsFn]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -94,8 +102,10 @@ function WorkspacePage() {
     }, 1200);
     try {
       const result = await editFn({ data: { current: content, instruction: value } });
+      // Snapshot the previous state so user can undo this AI edit
+      await saveFn({ data: { id, content: result.vsl, title: result.vsl.title, snapshot: true } });
       setContent(result.vsl);
-      await saveFn({ data: { id, content: result.vsl, title: result.vsl.title } });
+      setVersionCount((c) => Math.min(c + 1, 20));
       setMessages((m) => [...m, { role: "assistant", content: result.summary }]);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Erro ao aplicar mudança";
@@ -105,6 +115,23 @@ function WorkspacePage() {
       clearInterval(stepTimer);
       setThinking(null);
       setBusy(false);
+    }
+  };
+
+  const doRevert = async () => {
+    if (reverting || versionCount === 0) return;
+    if (!confirm("Reverter para a versão anterior?")) return;
+    setReverting(true);
+    try {
+      const r = await revertFn({ data: { id } });
+      setContent(r.content as VslContent);
+      setVersionCount((c) => Math.max(c - 1, 0));
+      setMessages((m) => [...m, { role: "assistant", content: "Revertido para a versão anterior." }]);
+      toast.success("Versão anterior restaurada");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao reverter");
+    } finally {
+      setReverting(false);
     }
   };
 
@@ -203,11 +230,15 @@ function WorkspacePage() {
             editable={editMode && !published}
             onChange={(next) => {
               if (published) return;
+              const isFirstEdit = !saveTimer.current;
               setContent(next);
               if (saveTimer.current) clearTimeout(saveTimer.current);
               saveTimer.current = setTimeout(() => {
-                void saveFn({ data: { id, content: next, title: next.title } });
-              }, 600);
+                void saveFn({ data: { id, content: next, title: next.title, snapshot: isFirstEdit } }).then(() => {
+                  if (isFirstEdit) setVersionCount((c) => Math.min(c + 1, 20));
+                });
+                saveTimer.current = null;
+              }, 800);
             }}
           />
         </div>
@@ -219,12 +250,28 @@ function WorkspacePage() {
     <div className="flex h-screen w-full overflow-hidden bg-background">
       {/* Chat panel — sempre full height, sem nada por baixo em mobile */}
       <aside className="flex h-full w-full flex-col border-border bg-sidebar md:w-[380px] md:border-r">
-        <div className="flex items-center justify-between gap-2 border-b border-border/60 px-4 py-3">
-          <Link to="/dashboard" className="flex items-center gap-2">
-            <img src={logo} alt="feneion" className="h-9 w-auto" />
-          </Link>
-          <div className="flex items-center gap-2">
-            <div className="hidden truncate text-xs text-muted-foreground sm:block">{title}</div>
+        <div className="flex items-center justify-between gap-2 border-b border-border/60 px-3 py-2.5">
+          <div className="flex items-center gap-1.5">
+            <Link to="/dashboard">
+              <Button size="icon" variant="ghost" className="h-8 w-8" title="Voltar ao dashboard">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link to="/dashboard" className="hidden md:block">
+              <img src={logo} alt="feneion" className="h-7 w-auto" />
+            </Link>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8"
+              disabled={versionCount === 0 || reverting || published}
+              onClick={doRevert}
+              title={versionCount === 0 ? "Sem versões anteriores" : `Desfazer (${versionCount})`}
+            >
+              {reverting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Undo2 className="h-4 w-4" />}
+            </Button>
             <Button
               size="sm"
               variant="outline"
