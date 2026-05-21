@@ -61,6 +61,10 @@ function WorkspacePage() {
         setTitle(proj.title);
         setPublished(!!proj.published);
         if (proj.published) setEditMode(false);
+        try {
+          const v = await versionsFn({ data: { id } });
+          if (!cancelled) setVersionCount(v.count);
+        } catch { /* ignore */ }
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Não foi possível abrir o projeto");
       } finally {
@@ -68,7 +72,7 @@ function WorkspacePage() {
       }
     })();
     return () => { cancelled = true; };
-  }, [id, navigate, fetchProject]);
+  }, [id, navigate, fetchProject, versionsFn]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -98,8 +102,10 @@ function WorkspacePage() {
     }, 1200);
     try {
       const result = await editFn({ data: { current: content, instruction: value } });
+      // Snapshot the previous state so user can undo this AI edit
+      await saveFn({ data: { id, content: result.vsl, title: result.vsl.title, snapshot: true } });
       setContent(result.vsl);
-      await saveFn({ data: { id, content: result.vsl, title: result.vsl.title } });
+      setVersionCount((c) => Math.min(c + 1, 20));
       setMessages((m) => [...m, { role: "assistant", content: result.summary }]);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Erro ao aplicar mudança";
@@ -109,6 +115,23 @@ function WorkspacePage() {
       clearInterval(stepTimer);
       setThinking(null);
       setBusy(false);
+    }
+  };
+
+  const doRevert = async () => {
+    if (reverting || versionCount === 0) return;
+    if (!confirm("Reverter para a versão anterior?")) return;
+    setReverting(true);
+    try {
+      const r = await revertFn({ data: { id } });
+      setContent(r.content as VslContent);
+      setVersionCount((c) => Math.max(c - 1, 0));
+      setMessages((m) => [...m, { role: "assistant", content: "Revertido para a versão anterior." }]);
+      toast.success("Versão anterior restaurada");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao reverter");
+    } finally {
+      setReverting(false);
     }
   };
 
