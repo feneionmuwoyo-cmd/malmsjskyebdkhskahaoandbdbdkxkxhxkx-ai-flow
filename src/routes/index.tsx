@@ -16,9 +16,22 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "feneion — Crie VSLs com IA" },
       {
         property: "og:description",
-        content: "Páginas de vendas e VSLs de alta conversão geradas por IA.",
+        content: "Páginas de vendas e VSLs de alta conversão geradas por IA, em português.",
       },
+      { property: "og:url", content: "https://malmsjskyebdkhskahaoandbdbdkxkxhxkx-ai-flow.lovable.app/" },
     ],
+    links: [{ rel: "canonical", href: "https://malmsjskyebdkhskahaoandbdbdkxkxhxkx-ai-flow.lovable.app/" }],
+    scripts: [{
+      type: "application/ld+json",
+      children: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        name: "feneion",
+        url: "https://malmsjskyebdkhskahaoandbdbdkxkxhxkx-ai-flow.lovable.app/",
+        description: "Crie VSLs e landing pages de alta conversão com IA.",
+        inLanguage: "pt",
+      }),
+    }],
   }),
   component: LandingPage,
 });
@@ -26,6 +39,12 @@ export const Route = createFileRoute("/")({
 function LandingPage() {
   return (
     <div className="relative min-h-screen overflow-hidden">
+      {/* Verde radial no centro para clarear a landing */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute left-1/2 top-1/3 -z-10 h-[700px] w-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-60 blur-3xl"
+        style={{ background: "radial-gradient(circle, oklch(0.78 0.18 140 / 0.45) 0%, oklch(0.65 0.22 145 / 0.25) 35%, transparent 70%)" }}
+      />
       <Header />
 
       <main className="relative">
