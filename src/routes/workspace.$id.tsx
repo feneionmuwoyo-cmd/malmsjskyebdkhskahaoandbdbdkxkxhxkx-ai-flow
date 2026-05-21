@@ -230,11 +230,15 @@ function WorkspacePage() {
             editable={editMode && !published}
             onChange={(next) => {
               if (published) return;
+              const isFirstEdit = !saveTimer.current;
               setContent(next);
               if (saveTimer.current) clearTimeout(saveTimer.current);
               saveTimer.current = setTimeout(() => {
-                void saveFn({ data: { id, content: next, title: next.title } });
-              }, 600);
+                void saveFn({ data: { id, content: next, title: next.title, snapshot: isFirstEdit } }).then(() => {
+                  if (isFirstEdit) setVersionCount((c) => Math.min(c + 1, 20));
+                });
+                saveTimer.current = null;
+              }, 800);
             }}
           />
         </div>
@@ -246,12 +250,28 @@ function WorkspacePage() {
     <div className="flex h-screen w-full overflow-hidden bg-background">
       {/* Chat panel — sempre full height, sem nada por baixo em mobile */}
       <aside className="flex h-full w-full flex-col border-border bg-sidebar md:w-[380px] md:border-r">
-        <div className="flex items-center justify-between gap-2 border-b border-border/60 px-4 py-3">
-          <Link to="/dashboard" className="flex items-center gap-2">
-            <img src={logo} alt="feneion" className="h-9 w-auto" />
-          </Link>
-          <div className="flex items-center gap-2">
-            <div className="hidden truncate text-xs text-muted-foreground sm:block">{title}</div>
+        <div className="flex items-center justify-between gap-2 border-b border-border/60 px-3 py-2.5">
+          <div className="flex items-center gap-1.5">
+            <Link to="/dashboard">
+              <Button size="icon" variant="ghost" className="h-8 w-8" title="Voltar ao dashboard">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link to="/dashboard" className="hidden md:block">
+              <img src={logo} alt="feneion" className="h-7 w-auto" />
+            </Link>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8"
+              disabled={versionCount === 0 || reverting || published}
+              onClick={doRevert}
+              title={versionCount === 0 ? "Sem versões anteriores" : `Desfazer (${versionCount})`}
+            >
+              {reverting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Undo2 className="h-4 w-4" />}
+            </Button>
             <Button
               size="sm"
               variant="outline"
