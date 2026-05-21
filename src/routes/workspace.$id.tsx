@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowUp, Eye, ExternalLink, Loader2, Monitor, Smartphone, Lock, PanelRightOpen } from "lucide-react";
+import { ArrowUp, Eye, ExternalLink, Loader2, Monitor, Smartphone, Lock, PanelRightOpen, ArrowLeft, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
-import { getProject, publishProject, updateProjectContent } from "@/lib/projects.functions";
+import { getProject, publishProject, updateProjectContent, revertLastVersion, hasVersions } from "@/lib/projects.functions";
 import { editVsl, type VslContent } from "@/lib/ai.functions";
 import { VslPreview } from "@/components/VslPreview";
 import { toast } from "sonner";
@@ -24,6 +24,8 @@ function WorkspacePage() {
   const editFn = useServerFn(editVsl);
   const saveFn = useServerFn(updateProjectContent);
   const publishFn = useServerFn(publishProject);
+  const revertFn = useServerFn(revertLastVersion);
+  const versionsFn = useServerFn(hasVersions);
 
   const [content, setContent] = useState<VslContent | null>(null);
   const [title, setTitle] = useState("");
@@ -39,6 +41,8 @@ function WorkspacePage() {
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
   const [editMode, setEditMode] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [versionCount, setVersionCount] = useState(0);
+  const [reverting, setReverting] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
