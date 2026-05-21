@@ -1,133 +1,66 @@
-## Visão geral
+## Ordem de execução
 
-São mudanças grandes. Vou dividir em **4 fases** para entregar com qualidade. Cada fase é independente e testável. Confirma e começo pela Fase 1.
-
----
-
-### Fase 1 — Estrutura base (dashboard + workspace limpos + tema)
-
-**Dashboard com sidebar**
-- Remover botões "Dashboard" e "Sair" da Header do dashboard.
-- Novo `AppSidebar` (shadcn) à esquerda com:
-  - Lista de **projetos** (rolável, com botão + para novo).
-  - Rodapé com **avatar do utilizador** → menu dropdown: *Editar perfil*, *Notificações* (com badge), *Assinar plano*, *Sair*.
-- Conteúdo principal do dashboard: **apenas um grande campo de prompt** (estilo Lovable home). Ao submeter → cria projeto + redireciona para `/workspace/$id?prompt=...`.
-
-**Workspace limpo**
-- Atualmente o preview aparece por baixo do chat em mobile/colunas. Vou fixar **layout 100vh, sem scroll exterior**: chat à esquerda (largura fixa), preview ocupa o resto. Nada por baixo do chat — área de input fica colada ao fundo do painel.
-- Botão **"Preview"** (abrir em nova aba) confirmado a funcionar — vou validar a rota `/preview/$id` e RLS.
-
-**Tema claro/escuro**
-- Toggle no avatar menu. Tokens já estão em `src/styles.css` em `oklch` — só falta a classe `.light` e o switch. Não vai mexer no design atual (modo escuro continua default).
-
-**Landing clean**
-- Remover sparkles/emojis decorativos (✨, 🚀, etc.) dos componentes da landing.
+Divido em **3 entregas** para garantir qualidade. Cada uma é testável de forma independente.
 
 ---
 
-### Fase 2 — IA verdadeiramente capaz (não só trocar texto)
+### Entrega A — Correções UX urgentes + SEO (faço agora)
 
-**Problema atual:** o schema `VslContent` é texto puro. A IA não consegue trocar cores, links ou comportamentos porque o modelo de dados não os representa.
+Mudanças pequenas e isoladas, baixo risco:
 
-**Solução — schema rico (`VslContentV2`):**
-```ts
-{
-  theme: { primary, accent, background, font, radius },
-  sections: [
-    { id, type: "hero"|"vsl"|"bullets"|"cta"|"testimonials"|"faq"|"quiz"|"checkout",
-      visible: boolean,
-      order: number,
-      props: { ...campos específicos do tipo, incluindo cor do botão, link de destino, etc. }
-    }
-  ]
-}
-```
+1. **Landing mais clara no centro** — adicionar gradiente verde radial subtil atrás do `<h1>` em `src/routes/index.tsx`.
+2. **Login mobile não força quiz** — `src/routes/login.tsx` redireciona sempre para `/dashboard` (nunca para `/onboard`).
+3. **Botão "Voltar ao dashboard"** no topo do `src/routes/workspace.$id.tsx`.
+4. **Histórico de versões** — nova tabela `project_versions` (snapshot do `content` a cada edit da IA) + botão "Desfazer" no chat que reverte para a versão anterior.
+5. **Upload de vídeo no preview/visual edit** — botão "Carregar vídeo" dentro do `VslPreview` quando o projeto não está publicado; abre `VideoPicker` (Galeria/YouTube/Drive) e grava `vslVideoUrl` no content.
+6. **SEO completo**:
+   - `head()` por rota com `title`, `description`, `og:*` únicos em `/`, `/login`, `/dashboard`, `/billing`, `/notifications`, `/profile`.
+   - `public/robots.txt` + `src/routes/sitemap[.]xml.ts` dinâmico.
+   - JSON-LD `Organization` no `__root.tsx` e `WebSite` na home.
+   - `llms.txt` em `public/` para assistentes IA.
+   - Canonical apenas em folhas.
 
-- A IA passa a receber este JSON e pode: trocar cor de qualquer botão, mudar destino de um link, esconder/mover secções, adicionar nova secção, mudar fonte/raio global.
-- Prompt do sistema reescrito com exemplos completos.
-- **Chat estilo Lovable**: além das frases de pensamento, mostrar **o que está a alterar** ("a mudar a cor do botão principal", "a esconder a secção de FAQ", "a adicionar urgência no hero") — vou usar streaming com etapas reais devolvidas pelo modelo.
-
-**Quiz médio quando a IA tem dúvidas**
-- Se o modelo devolver `needs_clarification: [{question, options}]`, abre um **Dialog pequeno** (não tela cheia) com as perguntas uma a uma. Resposta volta no contexto.
-
-**Dashboard → Workspace com prompt**
-- Ao escrever no dashboard e enviar, vai direto para o workspace, primeira mensagem já no chat, IA processa imediatamente. Se entender → implementa. Se não → abre o dialog de quiz.
+**Google Search Console**: não posso verificar sem o utilizador (tem de aprovar). No fim da entrega, dou as instruções para clicar e verificar o domínio.
 
 ---
 
-### Fase 3 — Vídeos + Template Quiz + Pagamento Express
+### Entrega B — Fase 2: IA verdadeiramente capaz
 
-**Upload de vídeos**
-- Novo bucket Supabase `vsl-videos` (privado, com policy: dono lê/escreve).
-- Componente `VideoPicker` com 3 tabs:
-  - **Galeria** (upload local → Supabase Storage, máx 100MB).
-  - **YouTube** (cola URL, faz embed `<iframe>`).
-  - **Google Drive** (cola URL pública, faz embed via `/preview`).
-- Substitui o placeholder atual de vídeo no `VslPreview`.
+Esta é a fase grande. Faço **depois** da Entrega A estar validada porque toca em todo o pipeline IA.
 
-**Template novo: "Quiz → VSL → Checkout"**
-- 3 ecrãs sequenciais dentro de uma VSL:
-  1. Quiz com 3-5 perguntas (configuráveis).
-  2. Vídeo de venda.
-  3. Checkout Express.
-- Disponível em `templates.ts` ao lado dos existentes.
-
-**Pagamento Express (Kz, sem Stripe)**
-- Tabela nova `payment_settings` (por projeto): `iban`, `nome_titular`, `telefone`, `montante`, `instrucoes`.
-- Tabela nova `customer_orders`: `project_id`, `nome_cliente`, `telefone_cliente`, `comprovativo_url`, `status` (pendente/confirmado), `created_at`.
-- Bucket `payment-proofs` (privado).
-- Toggle "Ativar pagamento Express" em **qualquer template** — adiciona a secção de checkout.
-- Formulário público para o cliente final: nome, telefone, upload de comprovativo (imagem ou PDF) → grava em `customer_orders`.
+1. **Schema `VslContentV2`** com `theme` (cores, fonte, raio) e `sections[]` com `props` editáveis (cor de botão, link de destino, visibilidade, ordem).
+2. **Migração de compatibilidade**: `VslPreview` lê V1 ou V2.
+3. **Novo `editVsl` em streaming** (`createServerFn` com `async function*`) — devolve etapas reais: `{ type: "thinking", text }`, `{ type: "action", text: "a mudar a cor do botão CTA" }`, `{ type: "patch", ops: [...] }`, `{ type: "done" }`.
+4. **Chat workspace** mostra cada etapa em tempo real (estilo Lovable).
+5. **`ClarificationDialog`** — quando a IA devolve `needs_clarification`, abre um pequeno dialog modal com a pergunta. Resposta volta no contexto.
+6. **Prompt do sistema reescrito** com exemplos de operações: mudar cor, esconder secção, reordenar, mudar link, mudar fonte, adicionar secção nova.
+7. **Upload de imagens/vídeos no chat** — input com paperclip, envia URL no contexto da IA ("usa esta imagem como hero").
 
 ---
 
-### Fase 4 — Analytics + Publicação + Notificações/Planos reais
+### Entrega C — Fases 3 e 4 condensadas
 
-**Analytics do criador**
-- Tabela `project_views` (anonymous insert): conta visualizações da VSL pública.
-- No dashboard do projeto, novo separador **"Resultados"**:
-  - Total de visitas
-  - Total de pedidos
-  - Total pagos (confirmados)
-  - Lista de clientes (nome, telefone, comprovativo) com botão *Confirmar pagamento*.
-
-**Publicação com link copiável**
-- Ao publicar, mostrar dialog com **URL pública da VSL** + botão "Copiar link" (já funcional). URL: `<dominio>/v/<slug>`.
-
-**Notificações reais**
-- Tabela `notifications` (`user_id`, `type`, `title`, `body`, `read`, `created_at`).
-- Trigger automático: novo pedido na VSL → notificação para o dono.
-- Dropdown no sidebar mostra não-lidas com badge.
-
-**Planos (Kz)**
-- Tabela `plans` (seed: Grátis, Pro, Business) e `user_subscriptions`.
-- Página `/billing` com cards de planos.
-- **Sem gateway** — utilizador clica "Assinar" → cria `customer_orders` interno para o admin processar manualmente (mesmo fluxo Express). Quando confirmado, ativa o plano. Sem Stripe/Paddle.
+1. **Vídeos**: bucket `vsl-videos`, `VideoPicker` (já feito na Entrega A integrado no preview, aqui também no chat).
+2. **Template Quiz→VSL→Checkout** em `src/data/templates.ts`.
+3. **Pagamento Express (Kz)**: tabelas `payment_settings` + `customer_orders`, bucket `payment-proofs`, toggle por projeto, formulário público para cliente final.
+4. **Analytics**: tabela `project_views`, separador "Resultados" no projeto (visitas, pedidos, confirmados, lista de clientes).
+5. **Notificações reais**: tabela `notifications` + trigger ao criar pedido + badge no sidebar.
+6. **Planos (Kz, sem Stripe)**: tabela `plans` (Grátis/Pro/Business) + `user_subscriptions`. Assinatura = `customer_orders` interno processado manualmente.
+7. **Publicação**: dialog com URL `/v/<slug>` + botão copiar (já existe a base).
 
 ---
 
-## Detalhes técnicos
+## Detalhes técnicos importantes
 
-- **Backend**: tudo em `createServerFn` (TanStack), nada de Edge Functions.
-- **RLS**: cada tabela nova com policies "dono lê/escreve". `customer_orders` permite *insert público* (cliente final não tem conta) mas *select* só pelo dono do projeto.
-- **Storage**: `vsl-videos` e `payment-proofs` privados com signed URLs para visualização pelo dono.
-- **Tema**: `next-themes` (já estilo shadcn) ou implementação manual com `localStorage` + classe `.light` no `<html>`.
-- **Quiz dialog**: componente `<ClarificationDialog>` baseado em `shadcn/dialog`, centrado e pequeno (max-w-md).
-- **Migrações**: 1 migração por fase (3-4 migrações no total).
+- Tudo em `createServerFn` (TanStack), nada de Edge Functions.
+- Streaming IA com `async function*` e `for await` no cliente.
+- RLS em todas as tabelas novas. `customer_orders` permite INSERT público mas SELECT só do dono.
+- `payment-proofs` e `vsl-videos` são buckets **privados** com signed URLs.
+- SEO: per-route `head()` em TanStack Start, canonical só em folhas (TanStack/router#6719).
+- Histórico de versões: limito a 20 snapshots por projeto para não inchar.
 
 ---
 
-## Ordem de entrega proposta
+## Pedido de confirmação
 
-| Fase | Esforço | Entrega |
-|---|---|---|
-| 1 | Médio | Dashboard com sidebar, workspace limpo, tema, landing sem emojis |
-| 2 | Alto | IA poderosa + chat com etapas reais + quiz de dúvidas |
-| 3 | Alto | Vídeos + template Quiz + pagamento Express |
-| 4 | Médio | Analytics + publicação + notificações + planos |
-
-**Lovable AI**: continuo a usar `google/gemini-3-flash-preview` (default). Para a Fase 2 (schema rico) pode valer a pena `google/gemini-3.1-pro-preview` por causa do raciocínio — confirma se posso.
-
-**Leaked password protection**: ✅ ativa essa opção no painel do Supabase Auth (Settings → Auth → Password Protection) — eu não consigo ativar isso por código.
-
-Aprovas o plano e começo pela **Fase 1**?
+Confirmas que faço **Entrega A agora** (UX + SEO) e depois passo para B (IA capaz)? Se preferires arrancar pela IA diretamente, diz.
