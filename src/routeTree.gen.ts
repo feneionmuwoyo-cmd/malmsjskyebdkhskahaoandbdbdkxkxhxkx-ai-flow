@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as OnboardRouteImport } from './routes/onboard'
 import { Route as NotificationsRouteImport } from './routes/notifications'
@@ -19,6 +20,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as WorkspaceIdRouteImport } from './routes/workspace.$id'
 import { Route as PreviewIdRouteImport } from './routes/preview.$id'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof NotificationsRoute
   '/onboard': typeof OnboardRoute
   '/profile': typeof ProfileRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/preview/$id': typeof PreviewIdRoute
   '/workspace/$id': typeof WorkspaceIdRoute
 }
@@ -84,6 +91,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof NotificationsRoute
   '/onboard': typeof OnboardRoute
   '/profile': typeof ProfileRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/preview/$id': typeof PreviewIdRoute
   '/workspace/$id': typeof WorkspaceIdRoute
 }
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/notifications': typeof NotificationsRoute
   '/onboard': typeof OnboardRoute
   '/profile': typeof ProfileRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/preview/$id': typeof PreviewIdRoute
   '/workspace/$id': typeof WorkspaceIdRoute
 }
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/onboard'
     | '/profile'
+    | '/sitemap.xml'
     | '/preview/$id'
     | '/workspace/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/onboard'
     | '/profile'
+    | '/sitemap.xml'
     | '/preview/$id'
     | '/workspace/$id'
   id:
@@ -131,6 +142,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/onboard'
     | '/profile'
+    | '/sitemap.xml'
     | '/preview/$id'
     | '/workspace/$id'
   fileRoutesById: FileRoutesById
@@ -143,12 +155,20 @@ export interface RootRouteChildren {
   NotificationsRoute: typeof NotificationsRoute
   OnboardRoute: typeof OnboardRoute
   ProfileRoute: typeof ProfileRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   PreviewIdRoute: typeof PreviewIdRoute
   WorkspaceIdRoute: typeof WorkspaceIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -223,9 +243,20 @@ const rootRouteChildren: RootRouteChildren = {
   NotificationsRoute: NotificationsRoute,
   OnboardRoute: OnboardRoute,
   ProfileRoute: ProfileRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   PreviewIdRoute: PreviewIdRoute,
   WorkspaceIdRoute: WorkspaceIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

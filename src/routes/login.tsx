@@ -12,7 +12,17 @@ type Search = { redirect?: string };
 
 export const Route = createFileRoute("/login")({
   validateSearch: (search: Record<string, unknown>): Search => ({
-    redirect: typeof search.redirect === "string" ? search.redirect : "/onboard",
+    redirect: typeof search.redirect === "string" ? search.redirect : "/dashboard",
+  }),
+  head: () => ({
+    meta: [
+      { title: "Entrar — feneion" },
+      { name: "description", content: "Entra na tua conta feneion ou cria conta nova para começar a gerar VSLs com IA." },
+      { property: "og:title", content: "Entrar — feneion" },
+      { property: "og:description", content: "Acede à tua conta feneion." },
+      { property: "og:url", content: "https://malmsjskyebdkhskahaoandbdbdkxkxhxkx-ai-flow.lovable.app/login" },
+    ],
+    links: [{ rel: "canonical", href: "https://malmsjskyebdkhskahaoandbdbdkxkxhxkx-ai-flow.lovable.app/login" }],
   }),
   component: LoginPage,
 });
@@ -94,7 +104,7 @@ function LoginPage() {
     toast.success("Conta criada — confirma o teu email se for pedido");
     // Try to sign in immediately (works if email confirmation disabled)
     const { error: signErr } = await supabase.auth.signInWithPassword({ email, password });
-    if (!signErr) navigate({ to: redirect || "/onboard" });
+    if (!signErr) navigate({ to: redirect || "/dashboard" });
   };
 
   return (

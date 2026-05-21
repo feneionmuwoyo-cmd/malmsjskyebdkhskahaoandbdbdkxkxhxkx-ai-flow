@@ -57,23 +57,43 @@ export const getProject = createServerFn({ method: "POST" })
 
 export const updateProjectContent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { id: string; content: unknown; title?: string }) =>
+  .inputValidator((input: { id: string; content: unknown; title?: string; snapshot?: boolean }) =>
     z.object({
       id: z.string().uuid(),
       content: z.any(),
       title: z.string().optional(),
+      snapshot: z.boolean().optional(),
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { supabase } = context;
-    // Block edits if project is already published
+    const { supabase, userId } = context;
     const { data: existing, error: e1 } = await supabase
       .from("projects")
-      .select("published")
+      .select("published, content, title")
       .eq("id", data.id)
       .single();
     if (e1) throw new Error(e1.message);
     if (existing?.published) throw new Error("Projeto publicado — não pode ser editado");
+
+    // Snapshot current state before overwriting (for undo)
+    if (data.snapshot && existing) {
+      await supabase.from("project_versions").insert({
+        project_id: data.id,
+        user_id: userId,
+        content: existing.content as never,
+        title: existing.title,
+      });
+      // Keep only latest 20 versions
+      const { data: olds } = await supabase
+        .from("project_versions")
+        .select("id")
+        .eq("project_id", data.id)
+        .order("created_at", { ascending: false })
+        .range(20, 100);
+      if (olds && olds.length > 0) {
+        await supabase.from("project_versions").delete().in("id", olds.map(o => o.id));
+      }
+    }
 
     const { error } = await supabase
       .from("projects")
@@ -86,12 +106,46 @@ export const updateProjectContent = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const revertLastVersion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: versions, error } = await supabase
+      .from("project_versions")
+      .select("id, content, title")
+      .eq("project_id", data.id)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    if (error) throw new Error(error.message);
+    if (!versions || versions.length === 0) throw new Error("Sem versões anteriores");
+    const v = versions[0];
+    const { error: upErr } = await supabase
+      .from("projects")
+      .update({ content: v.content as never, ...(v.title ? { title: v.title } : {}) })
+      .eq("id", data.id);
+    if (upErr) throw new Error(upErr.message);
+    await supabase.from("project_versions").delete().eq("id", v.id);
+    return { content: v.content, title: v.title };
+  });
+
+export const hasVersions = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { count } = await supabase
+      .from("project_versions")
+      .select("id", { count: "exact", head: true })
+      .eq("project_id", data.id);
+    return { count: count ?? 0 };
+  });
+
 export const publishProject = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { id: string }) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { supabase } = context;
-    // generate a unique slug from id (first 8 chars) — simple and predictable
     const slug = data.id.split("-")[0];
     const { error } = await supabase
       .from("projects")
