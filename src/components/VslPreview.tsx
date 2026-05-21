@@ -1,6 +1,7 @@
 import type * as React from "react";
 import type { VslContent } from "@/lib/ai.functions";
 import { ArrowRight, Check, ShieldCheck, Clock, ArrowUp, ArrowDown, Trash2, Play } from "lucide-react";
+import { VideoPickerButton } from "@/components/VideoPicker";
 
 type Props = {
   data: VslContent;
@@ -125,17 +126,32 @@ export function VslPreview({ data, editable = false, onChange }: Props) {
             multiline
           />
 
-          <div className="mt-10 aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-black/60 shadow-2xl">
+          <div className="relative mt-10 aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-black/60 shadow-2xl">
             {embed ? (
-              embed.match(/\.(mp4|webm|mov)(\?|$)/i) ? (
+              embed.match(/\.(mp4|webm|mov)(\?|$)/i) || embed.includes("supabase") ? (
                 <video src={embed} controls className="h-full w-full object-cover" />
               ) : (
                 <iframe src={embed} className="h-full w-full" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
               )
             ) : (
-              <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-white/40">
+              <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-white/40">
                 <Play className="h-8 w-8" />
-                <span className="text-sm">{editable ? "Cola o URL do vídeo na barra acima" : "[ Bloco VSL — adiciona o teu vídeo ]"}</span>
+                <span className="text-sm">[ Bloco VSL — adiciona o teu vídeo ]</span>
+                {editable && (
+                  <VideoPickerButton onPicked={(url) => update({ vslVideoUrl: url })} />
+                )}
+              </div>
+            )}
+            {editable && embed && (
+              <div className="absolute right-2 top-2 flex gap-1">
+                <VideoPickerButton onPicked={(url) => update({ vslVideoUrl: url })} label="Trocar" />
+                <button
+                  type="button"
+                  onClick={() => update({ vslVideoUrl: "" })}
+                  className="rounded-md bg-red-500/30 px-2 py-1 text-xs text-white hover:bg-red-500/50"
+                >
+                  Remover
+                </button>
               </div>
             )}
           </div>
