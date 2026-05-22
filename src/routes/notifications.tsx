@@ -4,6 +4,15 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { Bell } from "lucide-react";
 
 export const Route = createFileRoute("/notifications")({
+  head: () => ({
+    meta: [
+      { title: "Notificações — feneion" },
+      { name: "description", content: "Alertas de novos clientes, pagamentos e mensagens da feneion." },
+      { property: "og:title", content: "Notificações — feneion" },
+      { property: "og:description", content: "Centro de notificações da tua conta feneion." },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
   component: NotificationsPage,
 });
 

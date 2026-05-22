@@ -6,6 +6,16 @@ import { VslPreview } from "@/components/VslPreview";
 import type { VslContent } from "@/lib/ai.functions";
 
 export const Route = createFileRoute("/preview/$id")({
+  head: ({ params }) => ({
+    meta: [
+      { title: `VSL ${params.id.slice(0, 8)} — feneion` },
+      { name: "description", content: "Pré-visualização de uma VSL criada na feneion." },
+      { property: "og:title", content: "Pré-visualização VSL — feneion" },
+      { property: "og:description", content: "VSL publicada com feneion." },
+      { property: "og:url", content: `https://feneionmvpangola.lovable.app/preview/${params.id}` },
+    ],
+    links: [{ rel: "canonical", href: `https://feneionmvpangola.lovable.app/preview/${params.id}` }],
+  }),
   component: PreviewPage,
 });
 

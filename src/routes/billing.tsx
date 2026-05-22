@@ -5,6 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 
 export const Route = createFileRoute("/billing")({
+  head: () => ({
+    meta: [
+      { title: "Planos e faturação — feneion" },
+      { name: "description", content: "Escolhe o plano feneion ideal para o teu negócio. Pagamento em Kz." },
+      { property: "og:title", content: "Planos feneion — Grátis, Pro e Business" },
+      { property: "og:description", content: "Planos com pagamento em kwanzas, sem cartão internacional." },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
   component: BillingPage,
 });
 
