@@ -70,13 +70,20 @@ Produto/oferta do utilizador:
 
 ${data.answers ? `Detalhes adicionais:\n${Object.entries(data.answers).map(([k, v]) => `- ${k}: ${v}`).join("\n")}` : ""}
 
-Devolve APENAS um objeto JSON com esta estrutura exata (sem markdown, sem code fences):
+Escolhe o "format" adequado ao pedido (vsl, quiz, multi-video, long-form) e adapta a estrutura.
+
+Devolve APENAS um objeto JSON (sem markdown):
 {
-  "title": "título curto do projeto",
-  "headline": "headline principal poderosa",
-  "subheadline": "subheadline que reforça o benefício",
-  "cta": "texto do botão principal",
-  "vslScript": ["parágrafo 1 do script de vídeo", "parágrafo 2", "..."],
+  "title": "...",
+  "format": "vsl",
+  "headline": "...",
+  "subheadline": "...",
+  "cta": "...",
+  "ctaLink": "https://... (opcional)",
+  "ctaTiming": "end (start|middle|end|always)",
+  "vslScript": ["..."],
+  "videos": [{ "url": "...", "title": "..." }],
+  "quiz": [{ "question": "...", "options": ["...", "..."] }],
   "sections": [
     { "type": "problem", "heading": "...", "body": "...", "bullets": ["..."] },
     { "type": "solution", "heading": "...", "body": "..." },
@@ -86,11 +93,11 @@ Devolve APENAS um objeto JSON com esta estrutura exata (sem markdown, sem code f
     { "type": "urgency", "heading": "...", "body": "..." }
   ],
   "faq": [{ "q": "...", "a": "..." }],
-  "testimonials": [{ "name": "...", "role": "...", "quote": "..." }],
+  "testimonials": [{ "name": "...", "role": "...", "quote": "...", "rating": 5 }],
   "style": { "palette": "dark-premium", "accentColor": "#8BC53F" }
 }
 
-Regras: 6-8 secções, 5-8 FAQs, 3-4 testemunhos realistas, 4-6 parágrafos no vslScript. Tudo em português europeu. ZERO emojis.`;
+Regras: usa format="quiz" só se o utilizador pediu quiz; "multi-video" se pediu vários vídeos. 6-8 secções, 5-8 FAQs, 3-4 testemunhos com rating 4-5, 4-6 parágrafos no script. PT-PT. ZERO emojis.`;
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
