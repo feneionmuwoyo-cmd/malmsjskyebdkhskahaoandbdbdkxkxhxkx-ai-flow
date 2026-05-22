@@ -23,6 +23,15 @@ const QUESTIONS = [
 ];
 
 export const Route = createFileRoute("/onboard")({
+  head: () => ({
+    meta: [
+      { title: "Configurar nova VSL — feneion" },
+      { name: "description", content: "Responde a algumas perguntas e a IA da feneion gera a tua VSL personalizada." },
+      { property: "og:title", content: "Cria a tua VSL — feneion" },
+      { property: "og:description", content: "Setup rápido para gerar a tua VSL com IA." },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
   component: OnboardPage,
 });
 
