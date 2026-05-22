@@ -68,8 +68,8 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border/60">
-        <Link to="/dashboard" className="flex items-center gap-2 px-2 py-1">
-          <img src={logo} alt="feneion" className="h-10 w-auto" />
+        <Link to="/dashboard" className="flex items-center gap-2 px-2 py-2">
+          <img src={logo} alt="feneion" className="h-16 w-auto md:h-20" />
         </Link>
       </SidebarHeader>
 
