@@ -9,11 +9,19 @@ Devolves SEMPRE JSON válido seguindo exatamente a estrutura pedida.`;
 
 const VslSchema = z.object({
   title: z.string(),
+  format: z.enum(["vsl", "quiz", "multi-video", "long-form"]).optional(),
   headline: z.string(),
   subheadline: z.string(),
   cta: z.string(),
+  ctaLink: z.string().optional(),
+  ctaTiming: z.enum(["start", "middle", "end", "always"]).optional(),
   vslScript: z.array(z.string()),
   vslVideoUrl: z.string().optional(),
+  videos: z.array(z.object({ url: z.string(), title: z.string().optional() })).optional(),
+  quiz: z.array(z.object({
+    question: z.string(),
+    options: z.array(z.string()),
+  })).optional(),
   sections: z.array(z.object({
     type: z.enum(["problem", "solution", "benefits", "social-proof", "offer", "faq", "guarantee", "urgency"]),
     heading: z.string(),
@@ -21,12 +29,21 @@ const VslSchema = z.object({
     bullets: z.array(z.string()).optional(),
   })),
   faq: z.array(z.object({ q: z.string(), a: z.string() })),
-  testimonials: z.array(z.object({ name: z.string(), role: z.string(), quote: z.string() })),
+  testimonials: z.array(z.object({
+    name: z.string(),
+    role: z.string(),
+    quote: z.string(),
+    avatarUrl: z.string().optional(),
+    rating: z.number().min(1).max(5).optional(),
+  })),
   style: z.object({
     palette: z.enum(["dark-premium", "fintech", "course", "dropshipping", "saas"]),
     accentColor: z.string(),
+    backgroundUrl: z.string().optional(),
+    backgroundColor: z.string().optional(),
   }),
 });
+
 
 export type VslContent = z.infer<typeof VslSchema>;
 
