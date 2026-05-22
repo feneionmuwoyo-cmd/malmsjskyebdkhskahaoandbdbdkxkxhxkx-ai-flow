@@ -12,6 +12,13 @@ import { toast } from "sonner";
 import logo from "@/assets/feneion-logo.png";
 
 export const Route = createFileRoute("/workspace/$id")({
+  head: () => ({
+    meta: [
+      { title: "Editar VSL — feneion" },
+      { name: "description", content: "Editor visual e chat IA para refinar a tua VSL." },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
   component: WorkspacePage,
 });
 
