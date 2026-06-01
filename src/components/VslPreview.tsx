@@ -311,13 +311,20 @@ export function VslPreview({ data, editable = false, onChange }: Props) {
                       <div className="relative w-full" style={{ paddingTop: e.isVertical ? "177.78%" : "56.25%" }}>
                         <iframe src={e.src} className="absolute inset-0 h-full w-full" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen />
                       </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
       )}
 
       {/* Image gallery */}
-      {data.images && data.images.length > 0 && (
+      {((data.images && data.images.length > 0) || editable) && (
         <section className="border-t border-white/5 px-6 py-14">
           <div className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-2 md:grid-cols-3">
-            {data.images.map((img, i) => (
+            {(data.images ?? []).map((img, i) => (
               <div key={i} className="group/img relative overflow-hidden rounded-2xl border border-white/10 bg-black">
                 <img src={img.url} alt={img.alt ?? ""} className="block h-full w-full object-cover transition group-hover/img:scale-105" loading="lazy" />
                 {editable && (
@@ -341,7 +348,7 @@ export function VslPreview({ data, editable = false, onChange }: Props) {
                     const f = e.target.files?.[0]; if (!f) return;
                     try {
                       const { data: sess } = await supabase.auth.getSession();
-                      const uid = sess.session?.user.id; if (!uid) throw new Error("Sem sessão");
+                      const uid = sess.session?.user.id; if (!uid) throw new Error("Sem sessao");
                       const path = `${uid}/img-${Date.now()}-${f.name}`;
                       const { error } = await supabase.storage.from("vsl-videos").upload(path, f);
                       if (error) throw error;
@@ -356,13 +363,6 @@ export function VslPreview({ data, editable = false, onChange }: Props) {
         </section>
       )}
 
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
 
       {/* Sections */}
       {data.sections.map((s, i) => (
