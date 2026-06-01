@@ -2,14 +2,44 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const VSL_SYSTEM_PROMPT = `És um copywriter e estrategista de páginas de vendas de alta conversão.
-Adaptas-te ao que o utilizador pede: VSL clássica, quiz interativo, sequência de vídeos, página long-form ou checkout direto.
-Defines o campo "format" consoante o pedido: "vsl" (vídeo único), "quiz" (perguntas que levam ao CTA), "multi-video" (vários vídeos em sequência), "long-form" (texto longo sem vídeo).
-Geras conteúdo em português europeu, persuasivo, claro e sem clichés de IA.
-NUNCA uses emojis, ícones decorativos ou caracteres como sparkles, fogo, diamantes.
-Devolves SEMPRE JSON válido seguindo exatamente a estrutura pedida.
-Quando o utilizador pede alterações específicas (cor de botão, link de redirecionamento, posição do CTA, trocar fundo, eliminar testemunho, alterar timing) APLICAS exatamente o que foi pedido nos campos certos do JSON.`;
+const VSL_SYSTEM_PROMPT = `És o motor de criação de VSL da feneion — um construtor visual completo no mesmo nível do GPT Engineer do Lovable.
+Adaptas-te ao pedido do utilizador e geras estruturas de página de venda persuasivas em português europeu.
 
+REGRAS DE COPYWRITING (CRÍTICO):
+- VSLs NÃO são páginas de texto longo. Vídeo + 3 a 5 frases curtas + CTA. Menos é mais.
+- Headline curta e impactante (máx 12 palavras), subheadline com 1 frase clara.
+- "vslScript" devolve apenas 3 a 5 frases curtas (uma frase por elemento do array), nunca parágrafos longos.
+- Cada "section.body" tem no máximo 2 frases. Bullets curtos (4 a 7 palavras).
+- ZERO emojis, ZERO sparkles, ZERO clichés de IA ("revolução", "desbloqueia o teu potencial", "incrível jornada").
+- Português europeu, tom direto e confiante.
+
+FORMATOS POSSÍVEIS (campo "format"):
+- "vsl": vídeo único + CTA (default).
+- "quiz": perguntas de qualificação que terminam em CTA.
+- "multi-video": vários vídeos em sequência.
+- "long-form": página longa sem vídeo (raro, só se pedido).
+
+MODO BUILDER — aplicas QUALQUER alteração pedida no JSON correto:
+- "muda cor do botão para azul" -> style.accentColor = "#3b82f6"
+- "redireciona o botão para /checkout" -> ctaLink
+- "adiciona efeito pulsante no botão" -> ctaStyle.effect = "pulse" (opções: none, pulse, glow, bounce, shake)
+- "botão maior" -> ctaStyle.size = "lg" (sm, md, lg, xl)
+- "botão arredondado" -> ctaStyle.shape = "pill" | "rounded" | "square"
+- "adiciona galeria de fotos" -> images = [{url, alt}, ...]
+- "adiciona mais vídeos" -> videos = [{url, title}, ...]
+- "muda fundo para imagem X" -> style.backgroundUrl
+- "remove testemunho do João" -> testimonials filtrado
+- "põe garantia de 30 dias" -> ajusta secção guarantee
+- "esconde FAQ" -> faq = []
+- "põe CTA no fim" -> ctaTiming = "end"
+
+Devolves SEMPRE JSON válido, sem markdown, sem comentários.`;
+
+const CtaStyleSchema = z.object({
+  effect: z.enum(["none", "pulse", "glow", "bounce", "shake"]).optional(),
+  size: z.enum(["sm", "md", "lg", "xl"]).optional(),
+  shape: z.enum(["pill", "rounded", "square"]).optional(),
+}).optional();
 
 const VslSchema = z.object({
   title: z.string(),
@@ -19,9 +49,11 @@ const VslSchema = z.object({
   cta: z.string(),
   ctaLink: z.string().optional(),
   ctaTiming: z.enum(["start", "middle", "end", "always"]).optional(),
+  ctaStyle: CtaStyleSchema,
   vslScript: z.array(z.string()),
   vslVideoUrl: z.string().optional(),
   videos: z.array(z.object({ url: z.string(), title: z.string().optional() })).optional(),
+  images: z.array(z.object({ url: z.string(), alt: z.string().optional() })).optional(),
   quiz: z.array(z.object({
     question: z.string(),
     options: z.array(z.string()),
@@ -63,41 +95,39 @@ export const generateVsl = createServerFn({ method: "POST" })
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
 
-    const userPrompt = `Cria uma VSL/página de vendas completa.
+    const userPrompt = `Cria uma VSL curta e direta (estilo página de vendas moderna: vídeo + poucas frases + CTA forte).
 
 Produto/oferta do utilizador:
 "${data.prompt}"
 
 ${data.answers ? `Detalhes adicionais:\n${Object.entries(data.answers).map(([k, v]) => `- ${k}: ${v}`).join("\n")}` : ""}
 
-Escolhe o "format" adequado ao pedido (vsl, quiz, multi-video, long-form) e adapta a estrutura.
-
-Devolve APENAS um objeto JSON (sem markdown):
+Escolhe o "format" adequado. Mantém o copy ENXUTO. Devolve APENAS um objeto JSON (sem markdown):
 {
   "title": "...",
   "format": "vsl",
-  "headline": "...",
-  "subheadline": "...",
-  "cta": "...",
-  "ctaLink": "https://... (opcional)",
-  "ctaTiming": "end (start|middle|end|always)",
-  "vslScript": ["..."],
-  "videos": [{ "url": "...", "title": "..." }],
-  "quiz": [{ "question": "...", "options": ["...", "..."] }],
+  "headline": "máx 12 palavras",
+  "subheadline": "1 frase clara",
+  "cta": "Quero começar agora",
+  "ctaLink": "",
+  "ctaTiming": "end",
+  "ctaStyle": { "effect": "pulse", "size": "lg", "shape": "pill" },
+  "vslScript": ["frase 1", "frase 2", "frase 3"],
+  "videos": [],
+  "images": [],
+  "quiz": [],
   "sections": [
-    { "type": "problem", "heading": "...", "body": "...", "bullets": ["..."] },
-    { "type": "solution", "heading": "...", "body": "..." },
-    { "type": "benefits", "heading": "...", "body": "...", "bullets": ["..."] },
-    { "type": "offer", "heading": "...", "body": "...", "bullets": ["..."] },
-    { "type": "guarantee", "heading": "...", "body": "..." },
-    { "type": "urgency", "heading": "...", "body": "..." }
+    { "type": "problem", "heading": "...", "body": "máx 2 frases", "bullets": ["curto","curto","curto"] },
+    { "type": "solution", "heading": "...", "body": "máx 2 frases" },
+    { "type": "offer", "heading": "...", "body": "máx 2 frases", "bullets": ["...","...","..."] },
+    { "type": "guarantee", "heading": "...", "body": "1 frase" }
   ],
-  "faq": [{ "q": "...", "a": "..." }],
-  "testimonials": [{ "name": "...", "role": "...", "quote": "...", "rating": 5 }],
+  "faq": [{ "q": "...", "a": "1 a 2 frases" }],
+  "testimonials": [{ "name": "...", "role": "...", "quote": "1 frase", "rating": 5 }],
   "style": { "palette": "dark-premium", "accentColor": "#8BC53F" }
 }
 
-Regras: usa format="quiz" só se o utilizador pediu quiz; "multi-video" se pediu vários vídeos. 6-8 secções, 5-8 FAQs, 3-4 testemunhos com rating 4-5, 4-6 parágrafos no script. PT-PT. ZERO emojis.`;
+Regras: 3-5 secções no máximo, 3-5 FAQs, 3 testemunhos curtos, 3-5 frases no vslScript. PT-PT. ZERO emojis. Copy curto e cirúrgico.`;
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -161,15 +191,17 @@ export const editVsl = createServerFn({ method: "POST" })
           { role: "system", content: VSL_SYSTEM_PROMPT },
           {
             role: "user",
-            content: `VSL atual (JSON):
+            content: `MODO BUILDER. VSL atual em JSON:
 ${JSON.stringify(data.current)}
 
 Instrução do utilizador: "${data.instruction}"
 
-Devolve um único objeto JSON com esta estrutura:
+Aplica EXATAMENTE o pedido nos campos corretos do JSON (cores, links, efeitos do botão em ctaStyle.effect, timing, secções, testemunhos, imagens, vídeos, etc.). Se for ambíguo, faz a interpretação mais útil para conversão.
+
+Devolve um único objeto JSON:
 {
-  "summary": "explicação curta em português (1-3 frases) do que mudaste e porquê",
-  "vsl": { ...VSL completo atualizado com a mesma estrutura... }
+  "summary": "explicação curta (1-2 frases) do que mudaste",
+  "vsl": { ...VSL completo atualizado... }
 }
 
 Regras: ZERO emojis. Apenas JSON. Mantém a estrutura completa do VSL.`,
@@ -179,6 +211,8 @@ Regras: ZERO emojis. Apenas JSON. Mantém a estrutura completa do VSL.`,
       }),
     });
 
+    if (res.status === 429) throw new Error("Rate limit atingido. Tenta mais tarde.");
+    if (res.status === 402) throw new Error("Créditos da IA esgotados.");
     if (!res.ok) throw new Error(`AI gateway error: ${res.status}`);
     const json = await res.json() as { choices?: Array<{ message?: { content?: string } }> };
     const content = json.choices?.[0]?.message?.content;
