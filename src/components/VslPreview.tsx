@@ -141,17 +141,25 @@ export function VslPreview({ data, editable = false, onChange }: Props) {
     } finally { setUploadingBg(false); }
   };
 
+  const effect = data.ctaStyle?.effect ?? "none";
+  const size = data.ctaStyle?.size ?? "md";
+  const shape = data.ctaStyle?.shape ?? "pill";
+  const sizeClass = size === "sm" ? "px-5 py-2.5 text-sm" : size === "lg" ? "px-10 py-5 text-lg" : size === "xl" ? "px-12 py-6 text-xl" : "px-8 py-4 text-base";
+  const shapeClass = shape === "square" ? "rounded-md" : shape === "rounded" ? "rounded-xl" : "rounded-full";
+  const effectClass = effect === "pulse" ? "cta-effect-pulse" : effect === "glow" ? "cta-effect-glow" : effect === "bounce" ? "cta-effect-bounce" : effect === "shake" ? "cta-effect-shake" : "";
+
   const CtaButton = ({ extraClass = "" }: { extraClass?: string }) => (
     <button
       type="button"
       onClick={handleCtaClick}
-      className={`inline-flex items-center gap-2 rounded-full px-8 py-4 text-base font-semibold text-black shadow-xl transition hover:opacity-90 ${extraClass}`}
-      style={{ backgroundColor: accent }}
+      className={`inline-flex items-center gap-2 font-semibold text-black shadow-xl transition hover:opacity-90 ${sizeClass} ${shapeClass} ${effectClass} ${extraClass}`}
+      style={{ backgroundColor: accent, color: accent === "#000000" ? "#fff" : "#000" }}
     >
       <Editable as="span" value={data.cta} onSave={(v) => update({ cta: v })} />
       <ArrowRight className="h-5 w-5" />
     </button>
   );
+
 
   const heroBg: CSSProperties = bgImage
     ? { backgroundImage: `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.75)), url(${bgImage})`, backgroundSize: "cover", backgroundPosition: "center" }
