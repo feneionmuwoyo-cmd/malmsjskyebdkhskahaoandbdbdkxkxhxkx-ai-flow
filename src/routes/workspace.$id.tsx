@@ -34,6 +34,8 @@ function WorkspacePage() {
   const publishFn = useServerFn(publishProject);
   const revertFn = useServerFn(revertLastVersion);
   const versionsFn = useServerFn(hasVersions);
+  const dupFn = useServerFn(duplicateProject);
+
 
   const [content, setContent] = useState<VslContent | null>(null);
   const [title, setTitle] = useState("");
