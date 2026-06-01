@@ -218,6 +218,24 @@ function WorkspacePage() {
               {editMode ? "Sair edição" : "Visual edits"}
             </Button>
           )}
+          {published && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1"
+              onClick={async () => {
+                try {
+                  const r = await dupFn({ data: { id } });
+                  toast.success("Duplicado — abre a cópia para editar");
+                  navigate({ to: "/workspace/$id", params: { id: r.id } });
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : "Erro ao duplicar");
+                }
+              }}
+            >
+              <Copy className="h-3.5 w-3.5" /> Duplicar
+            </Button>
+          )}
           <Button
             size="sm"
             disabled={publishing || published}
@@ -226,6 +244,7 @@ function WorkspacePage() {
           >
             {published ? "Publicado" : publishing ? "A publicar..." : "Publicar"}
           </Button>
+
         </div>
       </div>
 
