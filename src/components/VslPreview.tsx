@@ -537,7 +537,46 @@ export function VslPreview({ data, editable = false, onChange }: Props) {
                   className="ml-2 h-8 w-12 cursor-pointer rounded border"
                 />
               </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <Label className="text-xs">Efeito</Label>
+                  <Select value={effect} onValueChange={(v) => update({ ctaStyle: { ...data.ctaStyle, effect: v as "none" | "pulse" | "glow" | "bounce" | "shake" } })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nenhum</SelectItem>
+                      <SelectItem value="pulse">Pulsar</SelectItem>
+                      <SelectItem value="glow">Brilho</SelectItem>
+                      <SelectItem value="bounce">Saltar</SelectItem>
+                      <SelectItem value="shake">Tremer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Tamanho</Label>
+                  <Select value={size} onValueChange={(v) => update({ ctaStyle: { ...data.ctaStyle, size: v as "sm" | "md" | "lg" | "xl" } })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sm">Pequeno</SelectItem>
+                      <SelectItem value="md">Médio</SelectItem>
+                      <SelectItem value="lg">Grande</SelectItem>
+                      <SelectItem value="xl">Enorme</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Forma</Label>
+                  <Select value={shape} onValueChange={(v) => update({ ctaStyle: { ...data.ctaStyle, shape: v as "pill" | "rounded" | "square" } })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pill">Pílula</SelectItem>
+                      <SelectItem value="rounded">Arredondado</SelectItem>
+                      <SelectItem value="square">Quadrado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
+
             <DialogFooter>
               <Button onClick={() => setCtaOpen(false)}>Concluído</Button>
             </DialogFooter>
