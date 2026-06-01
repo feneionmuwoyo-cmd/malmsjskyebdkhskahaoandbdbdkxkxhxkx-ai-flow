@@ -141,17 +141,25 @@ export function VslPreview({ data, editable = false, onChange }: Props) {
     } finally { setUploadingBg(false); }
   };
 
+  const effect = data.ctaStyle?.effect ?? "none";
+  const size = data.ctaStyle?.size ?? "md";
+  const shape = data.ctaStyle?.shape ?? "pill";
+  const sizeClass = size === "sm" ? "px-5 py-2.5 text-sm" : size === "lg" ? "px-10 py-5 text-lg" : size === "xl" ? "px-12 py-6 text-xl" : "px-8 py-4 text-base";
+  const shapeClass = shape === "square" ? "rounded-md" : shape === "rounded" ? "rounded-xl" : "rounded-full";
+  const effectClass = effect === "pulse" ? "cta-effect-pulse" : effect === "glow" ? "cta-effect-glow" : effect === "bounce" ? "cta-effect-bounce" : effect === "shake" ? "cta-effect-shake" : "";
+
   const CtaButton = ({ extraClass = "" }: { extraClass?: string }) => (
     <button
       type="button"
       onClick={handleCtaClick}
-      className={`inline-flex items-center gap-2 rounded-full px-8 py-4 text-base font-semibold text-black shadow-xl transition hover:opacity-90 ${extraClass}`}
-      style={{ backgroundColor: accent }}
+      className={`inline-flex items-center gap-2 font-semibold text-black shadow-xl transition hover:opacity-90 ${sizeClass} ${shapeClass} ${effectClass} ${extraClass}`}
+      style={{ backgroundColor: accent, color: accent === "#000000" ? "#fff" : "#000" }}
     >
       <Editable as="span" value={data.cta} onSave={(v) => update({ cta: v })} />
       <ArrowRight className="h-5 w-5" />
     </button>
   );
+
 
   const heroBg: CSSProperties = bgImage
     ? { backgroundImage: `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.75)), url(${bgImage})`, backgroundSize: "cover", backgroundPosition: "center" }
@@ -311,6 +319,50 @@ export function VslPreview({ data, editable = false, onChange }: Props) {
           </div>
         </section>
       )}
+
+      {/* Image gallery */}
+      {((data.images && data.images.length > 0) || editable) && (
+        <section className="border-t border-white/5 px-6 py-14">
+          <div className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-2 md:grid-cols-3">
+            {(data.images ?? []).map((img, i) => (
+              <div key={i} className="group/img relative overflow-hidden rounded-2xl border border-white/10 bg-black">
+                <img src={img.url} alt={img.alt ?? ""} className="block h-full w-full object-cover transition group-hover/img:scale-105" loading="lazy" />
+                {editable && (
+                  <button
+                    onClick={() => update({ images: (data.images ?? []).filter((_, k) => k !== i) })}
+                    className="absolute right-2 top-2 rounded bg-red-500/40 p-1.5 text-white opacity-0 transition hover:bg-red-500/70 group-hover/img:opacity-100"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            ))}
+            {editable && (
+              <label className="flex aspect-square cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed border-white/15 text-xs text-white/50 hover:border-white/40 hover:bg-white/5">
+                + Adicionar foto
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const f = e.target.files?.[0]; if (!f) return;
+                    try {
+                      const { data: sess } = await supabase.auth.getSession();
+                      const uid = sess.session?.user.id; if (!uid) throw new Error("Sem sessao");
+                      const path = `${uid}/img-${Date.now()}-${f.name}`;
+                      const { error } = await supabase.storage.from("vsl-videos").upload(path, f);
+                      if (error) throw error;
+                      const { data: pub } = supabase.storage.from("vsl-videos").getPublicUrl(path);
+                      update({ images: [...(data.images ?? []), { url: pub.publicUrl }] });
+                    } catch (err) { toast.error(err instanceof Error ? err.message : "Erro upload"); }
+                  }}
+                />
+              </label>
+            )}
+          </div>
+        </section>
+      )}
+
 
       {/* Sections */}
       {data.sections.map((s, i) => (
@@ -485,7 +537,46 @@ export function VslPreview({ data, editable = false, onChange }: Props) {
                   className="ml-2 h-8 w-12 cursor-pointer rounded border"
                 />
               </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <Label className="text-xs">Efeito</Label>
+                  <Select value={effect} onValueChange={(v) => update({ ctaStyle: { ...data.ctaStyle, effect: v as "none" | "pulse" | "glow" | "bounce" | "shake" } })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nenhum</SelectItem>
+                      <SelectItem value="pulse">Pulsar</SelectItem>
+                      <SelectItem value="glow">Brilho</SelectItem>
+                      <SelectItem value="bounce">Saltar</SelectItem>
+                      <SelectItem value="shake">Tremer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Tamanho</Label>
+                  <Select value={size} onValueChange={(v) => update({ ctaStyle: { ...data.ctaStyle, size: v as "sm" | "md" | "lg" | "xl" } })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sm">Pequeno</SelectItem>
+                      <SelectItem value="md">Médio</SelectItem>
+                      <SelectItem value="lg">Grande</SelectItem>
+                      <SelectItem value="xl">Enorme</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Forma</Label>
+                  <Select value={shape} onValueChange={(v) => update({ ctaStyle: { ...data.ctaStyle, shape: v as "pill" | "rounded" | "square" } })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pill">Pílula</SelectItem>
+                      <SelectItem value="rounded">Arredondado</SelectItem>
+                      <SelectItem value="square">Quadrado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
+
             <DialogFooter>
               <Button onClick={() => setCtaOpen(false)}>Concluído</Button>
             </DialogFooter>

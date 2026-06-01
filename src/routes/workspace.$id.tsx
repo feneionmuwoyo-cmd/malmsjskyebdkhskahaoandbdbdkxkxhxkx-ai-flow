@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowUp, Eye, ExternalLink, Loader2, Monitor, Smartphone, Lock, PanelRightOpen, ArrowLeft, Undo2 } from "lucide-react";
+import { ArrowUp, Eye, ExternalLink, Loader2, Monitor, Smartphone, Lock, PanelRightOpen, ArrowLeft, Undo2, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
-import { getProject, publishProject, updateProjectContent, revertLastVersion, hasVersions } from "@/lib/projects.functions";
+import { getProject, publishProject, updateProjectContent, revertLastVersion, hasVersions, duplicateProject } from "@/lib/projects.functions";
 import { editVsl, type VslContent } from "@/lib/ai.functions";
 import { VslPreview } from "@/components/VslPreview";
+
 import { toast } from "sonner";
 import logo from "@/assets/feneion-logo.png";
 
@@ -33,6 +34,8 @@ function WorkspacePage() {
   const publishFn = useServerFn(publishProject);
   const revertFn = useServerFn(revertLastVersion);
   const versionsFn = useServerFn(hasVersions);
+  const dupFn = useServerFn(duplicateProject);
+
 
   const [content, setContent] = useState<VslContent | null>(null);
   const [title, setTitle] = useState("");
@@ -215,6 +218,24 @@ function WorkspacePage() {
               {editMode ? "Sair edição" : "Visual edits"}
             </Button>
           )}
+          {published && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1"
+              onClick={async () => {
+                try {
+                  const r = await dupFn({ data: { id } });
+                  toast.success("Duplicado — abre a cópia para editar");
+                  navigate({ to: "/workspace/$id", params: { id: r.id } });
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : "Erro ao duplicar");
+                }
+              }}
+            >
+              <Copy className="h-3.5 w-3.5" /> Duplicar
+            </Button>
+          )}
           <Button
             size="sm"
             disabled={publishing || published}
@@ -223,6 +244,7 @@ function WorkspacePage() {
           >
             {published ? "Publicado" : publishing ? "A publicar..." : "Publicar"}
           </Button>
+
         </div>
       </div>
 

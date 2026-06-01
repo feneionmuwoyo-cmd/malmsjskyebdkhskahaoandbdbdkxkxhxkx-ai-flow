@@ -154,3 +154,31 @@ export const publishProject = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true, slug };
   });
+
+export const duplicateProject = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { id: string }) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { data: orig, error: e1 } = await supabase
+      .from("projects")
+      .select("title, initial_prompt, brief, content")
+      .eq("id", data.id)
+      .single();
+    if (e1 || !orig) throw new Error(e1?.message ?? "Projeto não encontrado");
+    const { data: row, error } = await supabase
+      .from("projects")
+      .insert({
+        user_id: userId,
+        title: `${orig.title} (cópia)`,
+        initial_prompt: orig.initial_prompt,
+        brief: orig.brief as never,
+        content: orig.content as never,
+        published: false,
+      })
+      .select("id")
+      .single();
+    if (error || !row) throw new Error(error?.message ?? "Falha ao duplicar");
+    return row;
+  });
+
