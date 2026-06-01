@@ -311,7 +311,51 @@ export function VslPreview({ data, editable = false, onChange }: Props) {
                       <div className="relative w-full" style={{ paddingTop: e.isVertical ? "177.78%" : "56.25%" }}>
                         <iframe src={e.src} className="absolute inset-0 h-full w-full" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen />
                       </div>
-                    )}
+      )}
+
+      {/* Image gallery */}
+      {data.images && data.images.length > 0 && (
+        <section className="border-t border-white/5 px-6 py-14">
+          <div className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-2 md:grid-cols-3">
+            {data.images.map((img, i) => (
+              <div key={i} className="group/img relative overflow-hidden rounded-2xl border border-white/10 bg-black">
+                <img src={img.url} alt={img.alt ?? ""} className="block h-full w-full object-cover transition group-hover/img:scale-105" loading="lazy" />
+                {editable && (
+                  <button
+                    onClick={() => update({ images: (data.images ?? []).filter((_, k) => k !== i) })}
+                    className="absolute right-2 top-2 rounded bg-red-500/40 p-1.5 text-white opacity-0 transition hover:bg-red-500/70 group-hover/img:opacity-100"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            ))}
+            {editable && (
+              <label className="flex aspect-square cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed border-white/15 text-xs text-white/50 hover:border-white/40 hover:bg-white/5">
+                + Adicionar foto
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const f = e.target.files?.[0]; if (!f) return;
+                    try {
+                      const { data: sess } = await supabase.auth.getSession();
+                      const uid = sess.session?.user.id; if (!uid) throw new Error("Sem sessão");
+                      const path = `${uid}/img-${Date.now()}-${f.name}`;
+                      const { error } = await supabase.storage.from("vsl-videos").upload(path, f);
+                      if (error) throw error;
+                      const { data: pub } = supabase.storage.from("vsl-videos").getPublicUrl(path);
+                      update({ images: [...(data.images ?? []), { url: pub.publicUrl }] });
+                    } catch (err) { toast.error(err instanceof Error ? err.message : "Erro upload"); }
+                  }}
+                />
+              </label>
+            )}
+          </div>
+        </section>
+      )}
+
                   </div>
                 </div>
               );
