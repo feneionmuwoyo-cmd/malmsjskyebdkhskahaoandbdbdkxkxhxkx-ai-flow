@@ -12,6 +12,10 @@ import {
   Moon,
   ChevronUp,
   Loader2,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  Copy,
 } from "lucide-react";
 import {
   Sidebar,
@@ -37,7 +41,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/components/ThemeProvider";
-import { listProjects } from "@/lib/projects.functions";
+import { listProjects, deleteProject, renameProject, duplicateProject } from "@/lib/projects.functions";
+import { toast } from "sonner";
 import logo from "@/assets/feneion-logo.png";
 
 type Project = { id: string; title: string; published: boolean };
@@ -47,9 +52,19 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { theme, toggle } = useTheme();
   const fetchList = useServerFn(listProjects);
+  const deleteFn = useServerFn(deleteProject);
+  const renameFn = useServerFn(renameProject);
+  const duplicateFn = useServerFn(duplicateProject);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const currentPath = useRouterState({ select: (r) => r.location.pathname });
+
+  const refresh = async () => {
+    try {
+      const list = await fetchList();
+      setProjects(list as Project[]);
+    } catch { /* ignore */ }
+  };
 
   useEffect(() => {
     let cancel = false;
@@ -64,6 +79,41 @@ export function AppSidebar() {
   }, [fetchList]);
 
   const initial = (user?.email?.[0] ?? "?").toUpperCase();
+
+  const handleRename = async (p: Project) => {
+    const next = window.prompt("Novo título", p.title);
+    if (!next || next.trim() === "" || next === p.title) return;
+    try {
+      await renameFn({ data: { id: p.id, title: next.trim() } });
+      toast.success("Renomeado");
+      await refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao renomear");
+    }
+  };
+
+  const handleDelete = async (p: Project) => {
+    if (!confirm(`Eliminar "${p.title}"? Esta ação não pode ser desfeita.`)) return;
+    try {
+      await deleteFn({ data: { id: p.id } });
+      toast.success("Eliminado");
+      await refresh();
+      if (currentPath.includes(p.id)) navigate({ to: "/dashboard" });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao eliminar");
+    }
+  };
+
+  const handleDuplicate = async (p: Project) => {
+    try {
+      const r = await duplicateFn({ data: { id: p.id } });
+      toast.success("Duplicado");
+      await refresh();
+      navigate({ to: "/workspace/$id", params: { id: r.id } });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao duplicar");
+    }
+  };
 
   return (
     <Sidebar collapsible="icon">
@@ -95,7 +145,7 @@ export function AppSidebar() {
                 projects.map((p) => {
                   const to = p.published ? `/preview/${p.id}` : `/workspace/${p.id}`;
                   return (
-                    <SidebarMenuItem key={p.id}>
+                    <SidebarMenuItem key={p.id} className="group/item">
                       <SidebarMenuButton
                         asChild
                         isActive={currentPath === to}
@@ -104,12 +154,36 @@ export function AppSidebar() {
                         <Link
                           to={p.published ? "/preview/$id" : "/workspace/$id"}
                           params={{ id: p.id }}
-                          className="flex items-center gap-2"
+                          className="flex items-center gap-2 pr-7"
                         >
                           <FileText className="h-4 w-4 shrink-0" />
                           <span className="truncate">{p.title}</span>
                         </Link>
                       </SidebarMenuButton>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            onClick={(e) => e.stopPropagation()}
+                            className="absolute right-1 top-1.5 flex h-6 w-6 items-center justify-center rounded text-muted-foreground opacity-0 transition hover:bg-sidebar-accent hover:text-foreground group-hover/item:opacity-100"
+                            aria-label="Ações"
+                          >
+                            <MoreHorizontal className="h-3.5 w-3.5" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-44">
+                          <DropdownMenuItem onClick={() => handleRename(p)}>
+                            <Pencil className="mr-2 h-3.5 w-3.5" /> Renomear
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDuplicate(p)}>
+                            <Copy className="mr-2 h-3.5 w-3.5" /> Duplicar
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleDelete(p)} className="text-destructive focus:text-destructive">
+                            <Trash2 className="mr-2 h-3.5 w-3.5" /> Eliminar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </SidebarMenuItem>
                   );
                 })

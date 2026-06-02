@@ -41,6 +41,19 @@ const CtaStyleSchema = z.object({
   shape: z.enum(["pill", "rounded", "square"]).optional(),
 }).optional();
 
+const CtaActionSchema = z.object({
+  type: z.enum(["link", "whatsapp", "tel", "email"]),
+  value: z.string(),
+  message: z.string().optional(),
+}).optional();
+
+const ScarcitySchema = z.object({
+  enabled: z.boolean(),
+  text: z.string(),
+  minutes: z.number().min(1).max(1440),
+  spotsLeft: z.number().optional(),
+}).optional();
+
 const VslSchema = z.object({
   title: z.string(),
   format: z.enum(["vsl", "quiz", "multi-video", "long-form"]).optional(),
@@ -48,8 +61,12 @@ const VslSchema = z.object({
   subheadline: z.string(),
   cta: z.string(),
   ctaLink: z.string().optional(),
-  ctaTiming: z.enum(["start", "middle", "end", "always"]).optional(),
+  ctaTiming: z.enum(["start", "middle", "end", "always", "at-time"]).optional(),
+  ctaShowAtSeconds: z.number().min(0).optional(),
+  ctaAction: CtaActionSchema,
   ctaStyle: CtaStyleSchema,
+  scarcity: ScarcitySchema,
+  slim: z.boolean().optional(),
   vslScript: z.array(z.string()),
   vslVideoUrl: z.string().optional(),
   videos: z.array(z.object({ url: z.string(), title: z.string().optional() })).optional(),

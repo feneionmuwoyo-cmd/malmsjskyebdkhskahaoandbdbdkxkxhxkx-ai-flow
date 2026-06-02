@@ -214,4 +214,29 @@ div[style*="Edit with Lovable"],
 .cta-effect-bounce { animation: cta-bounce 1.6s ease-in-out infinite; }
 .cta-effect-shake { animation: cta-shake 3s ease-in-out infinite; }
 
+/* Rotating conic-gradient glow ring around the dashboard prompt container */
+@keyframes prompt-glow-spin {
+  to { transform: rotate(360deg); }
+}
+.prompt-glow-ring {
+  position: absolute;
+  inset: -2px;
+  border-radius: 1.6rem;
+  padding: 2px;
+  background: conic-gradient(from 0deg,
+    oklch(0.82 0.19 130) 0%,
+    oklch(0.88 0.20 130) 25%,
+    transparent 50%,
+    oklch(0.82 0.19 130) 75%,
+    oklch(0.88 0.20 130) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: prompt-glow-spin 6s linear infinite;
+  filter: blur(0.5px) drop-shadow(0 0 18px oklch(0.82 0.19 130 / 0.45));
+  pointer-events: none;
+}
+
+
 
