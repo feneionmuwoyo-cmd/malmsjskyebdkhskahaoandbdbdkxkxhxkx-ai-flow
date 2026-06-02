@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowUp, Loader2 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { ArrowUp, Loader2, Sparkles, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -8,6 +9,8 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SUGGESTIONS } from "@/data/suggestions";
+import { generateVsl } from "@/lib/ai.functions";
+import { createProject } from "@/lib/projects.functions";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -24,8 +27,11 @@ export const Route = createFileRoute("/dashboard")({
 
 function DashboardPage() {
   const navigate = useNavigate();
+  const generate = useServerFn(generateVsl);
+  const createProj = useServerFn(createProject);
   const [authChecked, setAuthChecked] = useState(false);
   const [prompt, setPrompt] = useState("");
+  const [mode, setMode] = useState<"vsl" | "quiz">("vsl");
   const [submitting, setSubmitting] = useState(false);
   const [rotation, setRotation] = useState(0);
 
@@ -56,8 +62,19 @@ function DashboardPage() {
       return;
     }
     setSubmitting(true);
-    try { sessionStorage.setItem("feneion:pending-prompt", value); } catch { /* ignore */ }
-    navigate({ to: "/onboard" });
+    try {
+      const finalPrompt = mode === "quiz"
+        ? `[FORMATO: QUIZ] Cria uma página tipo quiz interativo (perguntas que qualificam e levam ao CTA). ${value}`
+        : value;
+      const content = await generate({ data: { prompt: finalPrompt } });
+      const project = await createProj({
+        data: { prompt: finalPrompt, brief: {}, content, title: content.title },
+      });
+      navigate({ to: "/workspace/$id", params: { id: project.id } });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao gerar");
+      setSubmitting(false);
+    }
   };
 
   if (!authChecked) {
@@ -82,32 +99,57 @@ function DashboardPage() {
               O que vais criar hoje?
             </h1>
             <p className="mt-3 text-center text-sm text-muted-foreground md:text-base">
-              Descreve o teu produto. A IA gera a tua VSL em segundos.
+              Descreve o teu produto. A IA gera tudo em segundos.
             </p>
 
-            <div className="mt-10 w-full">
-              <div className="glass rounded-3xl p-3 shadow-elegant">
-                <Textarea
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                      e.preventDefault();
-                      void submit();
-                    }
-                  }}
-                  placeholder="Quero vender um curso de emagrecimento para mulheres acima de 30 anos..."
-                  className="min-h-[120px] resize-none border-0 bg-transparent text-base placeholder:text-muted-foreground/70 focus-visible:ring-0 md:text-lg"
-                />
-                <div className="flex items-center justify-end gap-2 px-2 pb-1 pt-2">
-                  <Button
-                    onClick={submit}
+            {/* Mode toggle */}
+            <div className="mt-8 flex items-center gap-1 rounded-full border border-border/60 bg-card/40 p-1">
+              <button
+                type="button"
+                onClick={() => setMode("vsl")}
+                className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm transition ${mode === "vsl" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                <Sparkles className="h-4 w-4" /> VSL
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("quiz")}
+                className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm transition ${mode === "quiz" ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                <ListChecks className="h-4 w-4" /> Quiz
+              </button>
+            </div>
+
+            <div className="mt-6 w-full">
+              {/* Glowing rotating ring around prompt container */}
+              <div className="relative">
+                <div className="prompt-glow-ring" aria-hidden />
+                <div className="glass relative rounded-3xl p-3 shadow-elegant">
+                  <Textarea
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                        e.preventDefault();
+                        void submit();
+                      }
+                    }}
+                    placeholder={mode === "quiz"
+                      ? "Quero qualificar leads para o meu curso de inglês adultos..."
+                      : "Quero vender um curso de emagrecimento para mulheres acima de 30 anos..."}
                     disabled={submitting}
-                    size="icon"
-                    className="h-10 w-10 rounded-full bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow"
-                  >
-                    <ArrowUp className="h-5 w-5" />
-                  </Button>
+                    className="min-h-[120px] resize-none border-0 bg-transparent text-base placeholder:text-muted-foreground/70 focus-visible:ring-0 md:text-lg"
+                  />
+                  <div className="flex items-center justify-end gap-2 px-2 pb-1 pt-2">
+                    <Button
+                      onClick={submit}
+                      disabled={submitting}
+                      size="icon"
+                      className="h-10 w-10 rounded-full bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow"
+                    >
+                      {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowUp className="h-5 w-5" />}
+                    </Button>
+                  </div>
                 </div>
               </div>
 
