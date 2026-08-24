@@ -72,7 +72,7 @@ export const MessagePacks = () => {
           {packs.map((p, index) => (
             <div
               key={p.id}
-              className={`relative rounded-2xl border bg-card p-6 flex flex-col ${
+              className={`relative h-full rounded-2xl border bg-card p-6 flex flex-col ${
                 index === 1
                   ? "border-primary shadow-elevated ring-1 ring-primary/20"
                   : "border-border shadow-soft"
@@ -120,7 +120,7 @@ export const MessagePacks = () => {
 
               <Button
                 asChild
-                className={`mt-6 w-full rounded-xl h-11 font-semibold ${
+                className={`mt-auto w-full rounded-xl h-11 font-semibold ${
                   index === 1
                     ? "bg-foreground hover:bg-foreground/90 text-background"
                     : "bg-secondary hover:bg-secondary/80 text-foreground"
@@ -130,7 +130,7 @@ export const MessagePacks = () => {
               </Button>
             </div>
           ))}
-          <div className="relative rounded-2xl border border-dashed border-primary bg-card p-6 flex flex-col shadow-soft">
+          <div className="relative h-full rounded-2xl border border-dashed border-primary bg-card p-6 flex flex-col shadow-soft">
             <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-accent text-primary mb-4">
               <MessageSquare className="h-4 w-4" />
             </div>
@@ -145,7 +145,7 @@ export const MessagePacks = () => {
               <li className="flex gap-2"><Check className="h-3.5 w-3.5 shrink-0 text-primary" strokeWidth={3} />Mais capacidade para a sua operação</li>
               <li className="flex gap-2"><Check className="h-3.5 w-3.5 shrink-0 text-primary" strokeWidth={3} />Solução adaptada ao seu negócio</li>
             </ul>
-            <Button asChild className="mt-6 w-full rounded-xl h-11 font-semibold">
+            <Button asChild className="mt-auto w-full rounded-xl h-11 font-semibold">
               <a href="https://wa.me/244928663898" target="_blank" rel="noreferrer">Falar com a nossa equipa</a>
             </Button>
           </div>
