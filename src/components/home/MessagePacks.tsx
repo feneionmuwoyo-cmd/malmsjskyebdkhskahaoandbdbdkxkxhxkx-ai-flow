@@ -18,6 +18,21 @@ const defaultPacks: TopUpPack[] = [
   { id: "medium-ii", name: "Muwoyo Big", messages: 2500, price_kz: 30000, position: 3 },
 ];
 
+const packDetails: Record<string, { description: string; benefits: string[] }> = {
+  "Muwoyo Small": {
+    description: "Para começar ou para um menor volume de uso.",
+    benefits: ["500 mensagens", "Ideal para começar", "Sem expiração mensal", "Recarga pelo painel"],
+  },
+  "Muwoyo Medium": {
+    description: "O equilíbrio entre preço e volume para o dia a dia.",
+    benefits: ["Melhor custo-benefício", "1.000 mensagens", "Sem expiração mensal", "Recarga pelo painel"],
+  },
+  "Muwoyo Big": {
+    description: "Mais volume para quem atende mais clientes.",
+    benefits: ["2.500 mensagens", "Menor custo por uso", "Maior volume", "Sem expiração mensal"],
+  },
+};
+
 export const MessagePacks = () => {
   const [packs, setPacks] = useState<TopUpPack[]>(defaultPacks);
 
@@ -75,7 +90,10 @@ export const MessagePacks = () => {
               <h3 className="text-base font-semibold text-foreground">
                 {p.name}
               </h3>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="mt-2 min-h-10 text-sm leading-5 text-muted-foreground">
+                {packDetails[p.name]?.description || "Mais capacidade para acompanhar o volume do seu negócio."}
+              </p>
+              <p className="text-sm text-muted-foreground mt-3">
                 {p.messages.toLocaleString("pt-AO")} mensagens
               </p>
 
@@ -91,28 +109,13 @@ export const MessagePacks = () => {
                 ≈ {(p.price_kz / p.messages).toLocaleString("pt-AO", { maximumFractionDigits: 2 })} Kz por mensagem
               </p>
 
-              <ul className="mt-5 space-y-2 text-xs text-foreground">
-                <li className="flex gap-2">
-                  <Check
-                    className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5"
-                    strokeWidth={3}
-                  />
-                  Mensagens com a IA Muwoyo
-                </li>
-                <li className="flex gap-2">
-                  <Check
-                    className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5"
-                    strokeWidth={3}
-                  />
-                  Sem expiração mensal
-                </li>
-                <li className="flex gap-2">
-                  <Check
-                    className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5"
-                    strokeWidth={3}
-                  />
-                  Recarga simples no painel
-                </li>
+              <ul className="mt-5 min-h-[92px] space-y-2 text-xs text-foreground">
+                {(packDetails[p.name]?.benefits || ["Mensagens com a IA Muwoyo", "Sem expiração mensal", "Recarga simples no painel", "Mais capacidade para a sua operação"]).map((benefit) => (
+                  <li key={benefit} className="flex gap-2">
+                    <Check className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" strokeWidth={3} />
+                    {benefit}
+                  </li>
+                ))}
               </ul>
 
               <Button
