@@ -23,11 +23,11 @@ const messagesSequence: Message[] = [
     from: "user",
   },
   {
-    text: "Olá. Temos sim! Temos vários modelos de polos e t-shirts premium. Qual tamanho você procura?",
+    text: "Olá! 👋 Temos sim. A Polo Branca está disponível. Também temos outros modelos de polos e t-shirts. Qual tamanho procura?",
     from: "bot",
   },
   { text: "Tamanho M. Pode enviar fotos?", from: "user" },
-  { text: "Claro! Veja alguns modelos:", from: "bot" },
+  { text: "Claro! Veja alguns modelos disponíveis no tamanho M:", from: "bot" },
   {
     text: "Polo Premium Branca",
     from: "bot",
@@ -61,16 +61,16 @@ const messagesSequence: Message[] = [
     from: "user",
   },
   {
-    text: "Ótima escolha. Atendemos em Cabinda, Angola. Antes de finalizar, introduza a sua hora de funcionamento.",
+    text: "Excelente escolha! 😊 Vou preparar o seu pedido. Para calcular o valor da entrega, diga-me, por favor, em que zona ou município pretende receber o pedido.",
     from: "bot",
   },
   { text: "Vivo em Cabinda.", from: "user" },
   {
-    text: "Perfeito! O frete sai a 2.000 Kz. Total com desconto: 46.200 Kz.",
+    text: "Perfeito. Para entrega em Cabinda, o custo é de 2.000 Kz.\n\nResumo do pedido:\n- Polo Premium Branca\n- T-shirt Casual Azul\n- Camisa Social Cinza\n- 10% de desconto aplicado\n- Entrega: 2.000 Kz\n\nTotal a pagar: 46.200 Kz\n\nDeseja avançar para o pagamento?",
     from: "bot",
   },
   {
-    text: "Pagamento via IBAN:\nTitular: Adama Store\nIBAN: AO06 0000 1234 5678 9012 3456\nValor: 46.200 Kz",
+    text: "Perfeito. Pode efetuar o pagamento para:\n\nTitular: Adama Store\nIBAN: AO06 0000 1234 5678 9012 3456\nValor: 46.200 Kz\n\nDepois do pagamento, envie o comprovativo aqui para confirmarmos o seu pedido. 😊",
     from: "bot",
   },
   {
@@ -79,11 +79,7 @@ const messagesSequence: Message[] = [
     file: "comprovativo.pdf",
   },
   {
-    text: "Recebido. O seu pedido chega em 24h. Obrigado pela preferência.",
-    from: "bot",
-  },
-  {
-    text: "Se quiser, posso mostrar mais modelos de roupas e promoções de hoje.",
+    text: "Recebemos o comprovativo. Obrigado! O seu pedido será confirmado pela nossa equipa e receberá uma atualização assim que estiver em preparação. 🙌",
     from: "bot",
   },
 ];

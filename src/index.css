@@ -159,6 +159,18 @@ All colors MUST be HSL.
   color: #169c78 !important;
 }
 
+#precos > div > .grid > div:nth-child(2) {
+  border: 2px solid #169c78;
+  background: #f4fff7;
+  box-shadow: 0 12px 30px rgba(22, 156, 120, 0.16);
+}
+
+@media (min-width: 1024px) {
+  #precos > div > .grid > div:nth-child(2) {
+    transform: scale(1.04);
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
