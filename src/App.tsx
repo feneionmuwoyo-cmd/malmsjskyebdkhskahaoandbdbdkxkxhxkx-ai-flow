@@ -6,7 +6,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import RoleRoute from "@/components/RoleRoute";
-import PushPrompt from "@/components/PushPrompt";
 import OnboardingGate from "@/components/OnboardingGate";
 import CreditGate from "@/components/CreditGate";
 import RoleHomeRedirect from "@/components/RoleHomeRedirect";
@@ -43,9 +42,9 @@ import PwaLaunchGate from "./components/PwaLaunchGate";
 const queryClient = new QueryClient();
 const protectedPage = (page: JSX.Element) => (
   <ProtectedRoute>
-    <OnboardingGate>
-      <CreditGate>{page}</CreditGate>
-    </OnboardingGate>
+    <CreditGate>
+      <OnboardingGate>{page}</OnboardingGate>
+    </CreditGate>
   </ProtectedRoute>
 );
 
@@ -56,7 +55,6 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <PushPrompt />
           <PwaLaunchGate>
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -70,11 +68,9 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <RoleHomeRedirect>
-                    <OnboardingGate>
-                      <CreditGate>
-                        <Dashboard />
-                      </CreditGate>
-                    </OnboardingGate>
+                    <CreditGate>
+                      <OnboardingGate><Dashboard /></OnboardingGate>
+                    </CreditGate>
                   </RoleHomeRedirect>
                 </ProtectedRoute>
               }

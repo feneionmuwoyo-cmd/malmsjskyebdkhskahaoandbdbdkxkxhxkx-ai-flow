@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import logo from "@/assets/muwoyo-logo.png";
+import { initWebPush, isValidVapidPublicKey } from "@/lib/web-push";
 
 export default function Login() {
   const { user, signIn, loading } = useAuth();
@@ -18,6 +19,14 @@ export default function Login() {
   useEffect(() => {
     setStandalone(window.matchMedia("(display-mode: standalone)").matches || Boolean((window.navigator as Navigator & { standalone?: boolean }).standalone));
   }, []);
+
+  useEffect(() => {
+    if (loading || !user || window.localStorage.getItem("muwoyo_push_permission_requested")) return;
+    const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || import.meta.env.VAPID_PUBLIC_KEY;
+    if (!isValidVapidPublicKey(vapidKey) || !("Notification" in window)) return;
+    window.localStorage.setItem("muwoyo_push_permission_requested", "1");
+    void initWebPush().catch((error) => console.warn("Push permission was not enabled", error));
+  }, [loading, user]);
 
   useEffect(() => {
     if (!loading && user) {

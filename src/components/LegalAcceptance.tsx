@@ -91,8 +91,8 @@ export function LegalAcceptance({
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#f8fafc] p-4 sm:p-8">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-gradient-to-b from-primary/10 to-transparent" />
-      <Card className="relative w-full max-w-3xl overflow-hidden rounded-2xl border-slate-200 shadow-[0_20px_60px_rgba(15,23,42,0.10)]">
-        <CardHeader className="border-b bg-white p-6 sm:p-9">
+      <div className="relative w-full max-w-3xl">
+        <CardHeader className="bg-transparent p-0 pb-6">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"><ShieldCheck className="h-6 w-6" /></div>
             <div>
@@ -102,19 +102,19 @@ export function LegalAcceptance({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-6 bg-white p-6 sm:p-9">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Link to="/termos-uso" target="_blank" className="group rounded-xl border p-4 transition hover:border-primary/50 hover:bg-primary/5"><div className="flex items-center justify-between"><span className="font-semibold">Termos de Uso</span><ArrowRight className="h-4 w-4 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-primary" /></div><p className="mt-1 text-xs text-muted-foreground">Como a plataforma deve ser utilizada.</p></Link>
-            <Link to="/politica-privacidade" target="_blank" className="group rounded-xl border p-4 transition hover:border-primary/50 hover:bg-primary/5"><div className="flex items-center justify-between"><span className="font-semibold">Política de Privacidade</span><ArrowRight className="h-4 w-4 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-primary" /></div><p className="mt-1 text-xs text-muted-foreground">Como tratamos os seus dados.</p></Link>
+        <CardContent className="space-y-6 bg-transparent p-0">
+          <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
+            <Link to="/termos-uso" target="_blank" className="font-semibold text-primary hover:underline">Termos de Uso</Link>
+            <Link to="/politica-privacidade" target="_blank" className="font-semibold text-primary hover:underline">Política de Privacidade</Link>
           </div>
-          <label htmlFor="legal-consent" className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition ${legalConsent ? "border-primary/50 bg-primary/5" : "hover:bg-muted/40"}`}>
+          <label htmlFor="legal-consent" className="flex cursor-pointer items-start gap-3 py-2 transition">
             <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border ${legalConsent ? "border-primary bg-primary text-primary-foreground" : "border-input"}`}><Check className={`h-3.5 w-3.5 ${legalConsent ? "" : "opacity-0"}`} /></span>
             <input id="legal-consent" type="checkbox" checked={legalConsent} onChange={(e) => setLegalConsent(e.target.checked)} className="sr-only" />
             <span className="text-sm leading-relaxed">Confirmo que li e aceito os Termos de Uso e a Política de Privacidade.</span>
           </label>
           <Button onClick={handleAccept} disabled={!legalConsent || isLoading} className="h-12 w-full sm:w-auto sm:px-8">{isLoading ? "A guardar..." : "Aceitar e continuar"}<ArrowRight className="ml-2 h-4 w-4" /></Button>
         </CardContent>
-      </Card>
+      </div>
 
       <Dialog open={showRejectionModal} onOpenChange={setShowRejectionModal}>
         <DialogContent className="sm:max-w-md">

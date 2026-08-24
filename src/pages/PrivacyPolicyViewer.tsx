@@ -1,21 +1,18 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function PrivacyPolicyViewer() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="text-3xl font-bold text-center">
+      <main className="max-w-4xl mx-auto px-4">
+          <header className="mb-8">
+            <h1 className="text-3xl font-bold text-center">
               Política de Privacidade
-            </CardTitle>
+            </h1>
             <p className="text-center text-gray-600 mt-2">
               Última atualização: 22 Agosto de 2026
             </p>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[600px] w-full rounded-md border p-6">
+          </header>
+            <ScrollArea className="h-[600px] w-full p-0">
               <div className="space-y-6 text-sm leading-relaxed">
                 <section>
                   <h2 className="text-lg font-semibold mb-3">1. Introdução</h2>
@@ -133,7 +130,7 @@ export function PrivacyPolicyViewer() {
                 <section>
                   <h2 className="text-lg font-semibold mb-3">7. Contas sem actividade</h2>
                   <p>
-                    Podemos eliminar contas criadas há 90 dias que não tenham registado qualquer actividade. Quando a conta já tiver mensagens, configuração, conexão do WhatsApp, pagamento, recarga ou outra actividade, esta regra de eliminação por inactividade deixa de se aplicar. A eliminação respeita os prazos de retenção exigidos por lei.
+                    Podemos eliminar contas criadas há 30 dias que não tenham registado qualquer actividade. Quando a conta já tiver mensagens, configuração, conexão do WhatsApp, pagamento, recarga ou outra actividade, esta regra de eliminação por inactividade deixa de se aplicar. A eliminação respeita os prazos de retenção exigidos por lei.
                   </p>
                 </section>
 
@@ -208,9 +205,7 @@ export function PrivacyPolicyViewer() {
                 </section>
               </div>
             </ScrollArea>
-          </CardContent>
-        </Card>
-      </div>
+      </main>
     </div>
   );
 }

@@ -303,9 +303,7 @@ export default function OnboardingGate({
               className="min-h-32 text-base"
               placeholder={current.placeholder}
               value={value}
-              onChange={(e) =>
-                setForm({ ...form, [current.key]: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, [current.key]: current.key === "transfer_phone" ? e.target.value.replace(/\D/g, "") : e.target.value })}
             />
           ) : (
             <Input

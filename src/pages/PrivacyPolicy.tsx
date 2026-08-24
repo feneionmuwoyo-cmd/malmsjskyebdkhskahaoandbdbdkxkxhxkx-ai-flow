@@ -30,7 +30,7 @@ export function PrivacyPolicy({ onAccept, onReject }: PrivacyPolicyProps) {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <Card className="mb-6">
+      <div className="mb-6">
         <CardHeader>
           <CardTitle className="text-2xl">Política de Privacidade</CardTitle>
           <CardDescription>Última actualização: Maio de 2025</CardDescription>
@@ -38,7 +38,7 @@ export function PrivacyPolicy({ onAccept, onReject }: PrivacyPolicyProps) {
         <CardContent>
           <ScrollArea
             ref={scrollAreaRef}
-            className="h-[60vh] mb-6 p-4 border rounded-lg"
+            className="h-[60vh] mb-6 p-0"
             onScrollCapture={handleScroll}
           >
             <div className="space-y-6 text-sm leading-relaxed">
@@ -185,8 +185,9 @@ export function PrivacyPolicy({ onAccept, onReject }: PrivacyPolicyProps) {
                 <p>
                   Os seus dados são conservados enquanto a sua conta estiver
                   activa. Após o encerramento da conta, os dados são eliminados
-                  no prazo de 90 dias, salvo obrigação legal de conservação por
-                  período superior.
+                  conforme os prazos legais e a política de retenção aplicável.
+                  Contas criadas sem actividade podem ser eliminadas após 30 dias,
+                  salvo obrigação legal de conservação por período superior.
                 </p>
               </section>
 
@@ -250,7 +251,7 @@ export function PrivacyPolicy({ onAccept, onReject }: PrivacyPolicyProps) {
             </div>
           </div>
         </CardContent>
-      </Card>
+      </div>
     </div>
   );
 }

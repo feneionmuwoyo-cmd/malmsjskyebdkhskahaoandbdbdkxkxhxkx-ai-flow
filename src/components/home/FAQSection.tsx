@@ -12,7 +12,7 @@ const faqs = [
   },
   {
     question: "Como funcionam as 50 mensagens gratuitas?",
-    answer: "Depois de criar a sua conta, recebe 50 mensagens para testar o Agente de IA e conhecer a plataforma antes de fazer a ativação.",
+    answer: "O teste começa quando você conecta o seu WhatsApp pela primeira vez. A partir desse momento, tem 24 horas e até 50 mensagens para testar o Agente de IA.",
   },
   {
     question: "O que recebo depois de ativar a conta?",
@@ -20,7 +20,7 @@ const faqs = [
   },
   {
     question: "As mensagens têm validade?",
-    answer: "Não existe expiração mensal dos créditos. As mensagens permanecem disponíveis até serem utilizadas.",
+    answer: "As mensagens dos packs não expiram mensalmente. O teste gratuito termina após 24 horas ou quando as 50 mensagens forem utilizadas, o que acontecer primeiro.",
   },
   {
     question: "O que acontece quando as minhas mensagens terminarem?",

@@ -30,7 +30,7 @@ export function TermsOfUse({ onAccept, onReject }: TermsOfUseProps) {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <Card className="mb-6">
+      <div className="mb-6">
         <CardHeader>
           <CardTitle className="text-2xl">Termos de Uso</CardTitle>
           <CardDescription>
@@ -40,7 +40,7 @@ export function TermsOfUse({ onAccept, onReject }: TermsOfUseProps) {
         <CardContent>
           <ScrollArea
             ref={scrollAreaRef}
-            className="h-[60vh] mb-6 p-4 border rounded-lg"
+            className="h-[60vh] mb-6 p-0"
             onScrollCapture={handleScroll}
           >
             <div className="space-y-6 text-sm leading-relaxed">
@@ -80,8 +80,9 @@ export function TermsOfUse({ onAccept, onReject }: TermsOfUseProps) {
                     pedidos, agendamentos e relatórios automáticos.
                   </li>
                   <li>
-                    Integrações pré-configuradas com Google Sheets, Google
-                    Analytics e Google Calendar.
+                    Ferramentas próprias para gerir pedidos, agendamentos,
+                    clientes e a loja online, sem exigir integrações externas
+                    para essas funções essenciais.
                   </li>
                   <li>
                     Pacotes de mensagens adquiridos pelo utilizador conforme o
@@ -296,7 +297,7 @@ export function TermsOfUse({ onAccept, onReject }: TermsOfUseProps) {
             </div>
           </div>
         </CardContent>
-      </Card>
+      </div>
     </div>
   );
 }

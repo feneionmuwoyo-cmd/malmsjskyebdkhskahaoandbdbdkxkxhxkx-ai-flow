@@ -97,7 +97,7 @@ export default function MessageTopUp() {
           </CardContent>
         </Card>
       )}
-      <div className="grid grid-cols-2 items-stretch gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-1 items-stretch gap-4">
         {packs.map((p) => (
           <Card
             key={p.id}

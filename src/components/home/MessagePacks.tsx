@@ -15,7 +15,7 @@ type TopUpPack = {
 const defaultPacks: TopUpPack[] = [
   { id: "small", name: "Muwoyo Small", messages: 500, price_kz: 7500, position: 1 },
   { id: "medium", name: "Muwoyo Medium", messages: 1000, price_kz: 14000, position: 2 },
-  { id: "medium-ii", name: "Muwoyo Medium II", messages: 2500, price_kz: 30000, position: 3 },
+  { id: "medium-ii", name: "Muwoyo Big", messages: 2500, price_kz: 30000, position: 3 },
 ];
 
 export const MessagePacks = () => {
@@ -32,7 +32,7 @@ export const MessagePacks = () => {
 
       if (!error) {
         const loadedPacks = ((data as TopUpPack[]) || []).filter((pack) => !pack.name.toLowerCase().includes("big"));
-        setPacks(loadedPacks.length > 0 ? loadedPacks : defaultPacks);
+        setPacks(loadedPacks.length > 0 ? [...defaultPacks.map((fallback) => loadedPacks.find((pack) => pack.name === fallback.name) || fallback)] : defaultPacks);
       }
     };
 
@@ -131,7 +131,7 @@ export const MessagePacks = () => {
             <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-accent text-primary mb-4">
               <MessageSquare className="h-4 w-4" />
             </div>
-            <h3 className="text-base font-semibold text-foreground">Plano personalizado</h3>
+            <h3 className="text-base font-semibold text-foreground">Muwoyo Business</h3>
             <p className="text-sm text-muted-foreground mt-1">Para necessidades específicas</p>
             <div className="mt-5 text-3xl font-bold text-foreground">Sob consulta</div>
             <p className="text-sm text-muted-foreground mt-2">Fale com o suporte para encontrar a melhor solução para o seu negócio.</p>

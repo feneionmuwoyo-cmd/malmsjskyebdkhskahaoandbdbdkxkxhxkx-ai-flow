@@ -1,21 +1,18 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function TermsOfUseViewer() {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="text-3xl font-bold text-center">
+      <main className="max-w-4xl mx-auto px-4">
+          <header className="mb-8">
+            <h1 className="text-3xl font-bold text-center">
               Termos de Uso
-            </CardTitle>
+            </h1>
             <p className="text-center text-gray-600 mt-2">
               Última actualização: 22 Agosto de 2026
             </p>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[600px] w-full rounded-md border p-6">
+          </header>
+            <ScrollArea className="h-[600px] w-full p-0">
               <div className="space-y-6 text-sm leading-relaxed">
                 <section>
                   <h2 className="text-lg font-semibold mb-3">
@@ -113,7 +110,9 @@ export function TermsOfUseViewer() {
                   <p className="mb-3">
                     Após a activação, o utilizador pode adquirir pacotes de
                     mensagens conforme necessário, nos seguintes volumes
-                    disponíveis: 500, 1.000, 3.000 e 5.000 mensagens. Os
+                    disponíveis: 500, 1.000 e 2.500 mensagens. O plano Big não é
+                    oferecido publicamente; planos personalizados são tratados
+                    com o suporte. Os
                     pacotes adquiridos não têm data de expiração mensal e podem
                     ser utilizados ao ritmo do negócio do utilizador.
                   </p>
@@ -127,7 +126,7 @@ export function TermsOfUseViewer() {
                 <section>
                   <h2 className="text-lg font-semibold mb-3">6. Contas sem actividade</h2>
                   <p>
-                    Contas criadas que não tenham qualquer actividade na plataforma durante 90 dias podem ser eliminadas, incluindo os dados associados. Considera-se actividade a configuração do negócio, conexão do WhatsApp, utilização de mensagens, pagamentos, recargas ou outras acções registadas na conta. Contas que tenham iniciado actividade não são eliminadas por esta regra.
+                    Contas criadas que não tenham qualquer actividade na plataforma durante 30 dias podem ser eliminadas, incluindo os dados associados. Considera-se actividade a configuração do negócio, conexão do WhatsApp, utilização de mensagens, pagamentos, recargas ou outras acções registadas na conta. Contas que tenham iniciado actividade não são eliminadas por esta regra.
                   </p>
                 </section>
 
@@ -272,9 +271,7 @@ export function TermsOfUseViewer() {
                 </section>
               </div>
             </ScrollArea>
-          </CardContent>
-        </Card>
-      </div>
+      </main>
     </div>
   );
 }

@@ -181,6 +181,18 @@ begin
     select p.user_id from public.profiles p
     where p.account_status = 'inactive' and p.trial_expires_at <= now()
   );
+  insert into public.notifications (user_id, title, message, type, link)
+  select p.user_id,
+    'Período de teste terminado',
+    'O seu teste terminou. Contacte o suporte para pagar o setup e continuar a utilizar a Muwoyo.',
+    'trial_expired', '/recargas'
+  from public.profiles p
+  where p.account_status = 'inactive'
+    and p.trial_expires_at <= now()
+    and not exists (
+      select 1 from public.notifications n
+      where n.user_id = p.user_id and n.type = 'trial_expired'
+    );
   return coalesce(expired_count, 0);
 end;
 $$;
@@ -227,3 +239,95 @@ begin
   return coalesce(deleted_count, 0);
 end;
 $$;
+
+create or replace function public.consume_ai_messages(p_user_id uuid, p_count integer default 1)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  profile_row public.profiles;
+  remaining integer;
+begin
+  if p_count <= 0 then raise exception 'invalid_message_count'; end if;
+  select * into profile_row from public.profiles where user_id = p_user_id for update;
+  if profile_row.user_id is null then raise exception 'profile_not_found'; end if;
+  remaining := greatest(profile_row.message_limit - profile_row.messages_received, 0);
+  if remaining < p_count then return remaining; end if;
+
+  update public.profiles
+  set messages_received = messages_received + p_count,
+      account_status = case
+        when account_status = 'trial' and remaining = p_count then 'inactive'
+        else account_status
+      end
+  where user_id = p_user_id;
+
+  if profile_row.account_status = 'trial' and remaining = p_count then
+    update public.instances set automation_paused = true where user_id = p_user_id;
+    insert into public.notifications (user_id, title, message, type, link)
+    select p_user_id, 'Período de teste terminado', 'As 50 mensagens foram utilizadas. Contacte o suporte para pagar o setup.', 'trial_expired', '/recargas'
+    where not exists (select 1 from public.notifications where user_id = p_user_id and type = 'trial_expired');
+  end if;
+  return remaining - p_count;
+end;
+$$;
+
+revoke all on function public.consume_ai_messages(uuid, integer) from public, anon, authenticated;
+grant execute on function public.consume_ai_messages(uuid, integer) to service_role;
+
+-- Do not create a trial notification before WhatsApp is connected.
+create or replace function public.notify_new_account()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.notifications (user_id, title, message, type, link)
+  values (
+    new.user_id,
+    'Bem-vindo à Muwoyo',
+    'Complete o onboarding e conecte o seu WhatsApp. O teste de 24 horas e 50 mensagens começa quando a conexão for concluída.',
+    'welcome',
+    '/dashboard'
+  );
+  return new;
+end;
+$$;
+
+-- A trial also ends immediately when its last message is consumed.
+create or replace function public.consume_ai_messages(p_user_id uuid, p_count integer default 1)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  profile_row public.profiles;
+  remaining integer;
+begin
+  if p_count <= 0 then raise exception 'invalid_message_count'; end if;
+  select * into profile_row from public.profiles where user_id = p_user_id for update;
+  if profile_row.user_id is null then raise exception 'profile_not_found'; end if;
+  remaining := greatest(profile_row.message_limit - profile_row.messages_received, 0);
+  if remaining < p_count then return remaining; end if;
+
+  update public.profiles
+  set messages_received = messages_received + p_count,
+      account_status = case
+        when account_status = 'trial' and remaining = p_count then 'inactive'
+        else account_status
+      end
+  where user_id = p_user_id;
+
+  if profile_row.account_status = 'trial' and remaining = p_count then
+    update public.instances set automation_paused = true where user_id = p_user_id;
+  end if;
+  return remaining - p_count;
+end;
+$$;
+
+revoke all on function public.consume_ai_messages(uuid, integer) from public, anon, authenticated;
+grant execute on function public.consume_ai_messages(uuid, integer) to service_role;

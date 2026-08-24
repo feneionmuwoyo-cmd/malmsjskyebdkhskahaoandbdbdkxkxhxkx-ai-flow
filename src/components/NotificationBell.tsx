@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { initWebPush, notifyBrowserFromApp } from "@/lib/web-push";
+import { initWebPush } from "@/lib/web-push";
 import { useToast } from "@/hooks/use-toast";
 
 type Notice = { id: string; title: string; message: string; is_read: boolean | null; image_url?: string | null; link?: string | null; created_at?: string | null };
@@ -15,7 +15,6 @@ export default function NotificationBell() {
   const { toast } = useToast();
   const [items, setItems] = useState<Notice[]>([]);
   const [pushAvailable, setPushAvailable] = useState(false);
-  const lastShownNotificationId = useRef<string | null>(null);
   const unread = items.filter((n) => !n.is_read).length;
 
   useEffect(() => {
@@ -30,14 +29,6 @@ export default function NotificationBell() {
   };
 
   useEffect(() => { load(); }, [user]);
-
-  useEffect(() => {
-    if (!items.length) return;
-    const latest = items[0];
-    if (!latest || latest.is_read || latest.id === lastShownNotificationId.current) return;
-    lastShownNotificationId.current = latest.id;
-    void notifyBrowserFromApp(latest.title, latest.message, latest.image_url || undefined, latest.link || undefined);
-  }, [items]);
 
   const handleEnablePush = async () => {
     const result = await initWebPush();
