@@ -132,11 +132,18 @@ export const MessagePacks = () => {
               <MessageSquare className="h-4 w-4" />
             </div>
             <h3 className="text-base font-semibold text-foreground">Muwoyo Business</h3>
-            <p className="text-sm text-muted-foreground mt-1">Para necessidades específicas</p>
+            <p className="text-sm text-muted-foreground mt-1">Para empresas com maior volume</p>
+            <p className="mt-3 text-sm font-medium text-foreground">Precisa de mais mensagens ou de uma solução adaptada à sua operação?</p>
+            <p className="mt-4 text-sm font-semibold text-primary">Volume personalizado</p>
             <div className="mt-5 text-3xl font-bold text-foreground">Sob consulta</div>
-            <p className="text-sm text-muted-foreground mt-2">Fale com o suporte para encontrar a melhor solução para o seu negócio.</p>
+            <p className="text-sm text-muted-foreground mt-2">Definimos uma solução de acordo com as necessidades e o volume de atendimento da sua empresa.</p>
+            <ul className="mt-4 space-y-2 text-xs text-foreground">
+              <li className="flex gap-2"><Check className="h-3.5 w-3.5 shrink-0 text-primary" strokeWidth={3} />Volume personalizado</li>
+              <li className="flex gap-2"><Check className="h-3.5 w-3.5 shrink-0 text-primary" strokeWidth={3} />Mais capacidade para a sua operação</li>
+              <li className="flex gap-2"><Check className="h-3.5 w-3.5 shrink-0 text-primary" strokeWidth={3} />Solução adaptada ao seu negócio</li>
+            </ul>
             <Button asChild className="mt-6 w-full rounded-xl h-11 font-semibold">
-              <a href="https://wa.me/244928663898" target="_blank" rel="noreferrer">Contactar suporte</a>
+              <a href="https://wa.me/244928663898" target="_blank" rel="noreferrer">Falar com a nossa equipa</a>
             </Button>
           </div>
         </div>
