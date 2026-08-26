@@ -57,6 +57,7 @@ Deno.serve(async (req) => {
       const emb = await embed(c);
       const { error } = await admin.from("ai_documents").insert({
         user_id: u.user.id,
+        market: "global",
         title,
         content: c,
         source,

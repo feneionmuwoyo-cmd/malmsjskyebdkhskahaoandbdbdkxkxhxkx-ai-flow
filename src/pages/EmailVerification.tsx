@@ -8,6 +8,7 @@ import { useRole } from "@/hooks/useRole";
 import { supabase } from "@/integrations/supabase/client";
 import { resendVerificationCode, verifyEmailCode, type EmailVerificationError } from "@/lib/email-verification";
 import logo from "@/assets/muwoyo-logo.png";
+import { LanguageSelector, useLanguage } from "@/hooks/useLanguage";
 
 const CODE_LENGTH = 6;
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -19,15 +20,15 @@ function maskEmail(email: string) {
   return `${visible}${"*".repeat(Math.max(2, name.length - visible.length))}@${domain}`;
 }
 
-function errorMessage(error: EmailVerificationError) {
+function errorMessage(error: EmailVerificationError, isPortuguese: boolean) {
   switch (error) {
-    case "invalid_code": return "O código está incorreto. Tente novamente.";
-    case "expired_code": return "Este código expirou. Solicite um novo código.";
-    case "too_many_attempts": return "O limite de tentativas foi atingido. Solicite um novo código mais tarde.";
-    case "resend_cooldown": return "Aguarde alguns segundos antes de solicitar outro código.";
-    case "unauthorized": return "A sua sessão expirou. Entre novamente para confirmar o e-mail.";
-    case "not_configured": return "A confirmação por código ainda não está disponível. O backend de verificação será ligado posteriormente.";
-    default: return "Ocorreu um erro temporário. Tente novamente.";
+    case "invalid_code": return isPortuguese ? "O código está incorreto. Tente novamente." : "The code is incorrect. Try again.";
+    case "expired_code": return isPortuguese ? "Este código expirou. Solicite um novo código." : "This code has expired. Request a new one.";
+    case "too_many_attempts": return isPortuguese ? "O limite de tentativas foi atingido." : "Too many attempts. Request a new code later.";
+    case "resend_cooldown": return isPortuguese ? "Aguarde antes de solicitar outro código." : "Please wait before requesting another code.";
+    case "unauthorized": return isPortuguese ? "A sua sessão expirou. Entre novamente." : "Your session expired. Sign in again.";
+    case "not_configured": return isPortuguese ? "A confirmação por código ainda não está disponível." : "Code confirmation is not available yet.";
+    default: return isPortuguese ? "Ocorreu um erro temporário. Tente novamente." : "A temporary error occurred. Try again.";
   }
 }
 
@@ -37,7 +38,6 @@ export default function EmailVerification() {
   const location = useLocation();
   const navigate = useNavigate();
   const stateEmail = (location.state as { email?: string } | null)?.email;
-  const initialSend = Boolean((location.state as { initialSend?: boolean } | null)?.initialSend);
   const emailChange = Boolean((location.state as { emailChange?: boolean } | null)?.emailChange);
   const email = stateEmail || user?.email || window.sessionStorage.getItem("muwoyo_pending_email") || "";
   const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(""));
@@ -46,21 +46,14 @@ export default function EmailVerification() {
   const [cooldown, setCooldown] = useState(0);
   const [resending, setResending] = useState(false);
   const inputs = useRef<Array<HTMLInputElement | null>>([]);
-  const initialSendStarted = useRef(false);
+  const [codeRequested, setCodeRequested] = useState(false);
+  const { language } = useLanguage();
+  const isPortuguese = language === "pt";
 
   useEffect(() => {
     if (!roleLoading && role === "admin") navigate("/admin", { replace: true });
     if (!roleLoading && role === "sub_admin") navigate("/gestor", { replace: true });
   }, [navigate, role, roleLoading]);
-
-  useEffect(() => {
-    if (!initialSend || initialSendStarted.current) return;
-    initialSendStarted.current = true;
-    resendVerificationCode(email).then((result) => {
-      if (result.success) setCooldown(RESEND_COOLDOWN_SECONDS);
-      else setError(result.error);
-    });
-  }, [initialSend, email]);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -99,6 +92,7 @@ export default function EmailVerification() {
     setError(null);
     const result = await verifyEmailCode(code, email);
     if (result.success) {
+      setCodeRequested(true);
       await supabase.auth.refreshSession();
       setStatus("success");
       window.sessionStorage.removeItem("muwoyo_pending_email");
@@ -158,15 +152,15 @@ export default function EmailVerification() {
               />
             ))}
           </div>
-          {error && <p className="text-center text-sm text-destructive">{errorMessage(error)}</p>}
-          {status === "success" && <p className="text-center text-sm text-primary">E-mail confirmado. A abrir o dashboard...</p>}
+          {error && <p className="text-center text-sm text-destructive">{errorMessage(error, isPortuguese)}</p>}
+          {status === "success" && <p className="text-center text-sm text-primary">{isPortuguese ? "E-mail confirmado. A abrir o dashboard..." : "Email confirmed. Opening your dashboard..."}</p>}
           <Button className="w-full" disabled={code.length !== CODE_LENGTH || status === "verifying" || status === "success"} onClick={confirm}>
-            {status === "verifying" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Verificando...</> : "Confirmar e-mail"}
+            {status === "verifying" ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{isPortuguese ? "A verificar..." : "Verifying..."}</> : isPortuguese ? "Confirmar e-mail" : "Confirm email"}
           </Button>
           <div className="text-center text-sm text-muted-foreground">
-            <p>Não recebeu o código?</p>
+            <p>{isPortuguese ? "Não recebeu o código?" : "Didn't receive the code?"}</p>
             <button type="button" className="mt-1 font-medium text-primary hover:underline disabled:cursor-not-allowed disabled:opacity-50" disabled={cooldown > 0 || resending} onClick={resend}>
-              {resending ? "Reenviando código..." : cooldown > 0 ? `Reenviar em ${cooldown}s` : "Reenviar código"}
+              {resending ? (isPortuguese ? "A pedir o código..." : "Requesting code..." ) : cooldown > 0 ? `${isPortuguese ? "Pedir novamente em" : "Request again in"} ${cooldown}s` : codeRequested ? (isPortuguese ? "Pedir novo código" : "Request new code") : (isPortuguese ? "Pedir código de confirmação" : "Request verification code")}
             </button>
           </div>
         </CardContent>

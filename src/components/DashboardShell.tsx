@@ -12,6 +12,8 @@ import {
   Boxes,
   ArrowRightLeft,
   PlayCircle,
+  Plug,
+  MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -20,6 +22,8 @@ import { supabase } from "@/integrations/supabase/client";
 import NotificationBell from "@/components/NotificationBell";
 import ProfileSheet from "@/components/ProfileSheet";
 import logo from "@/assets/muwoyo-logo.png";
+import { GLOBAL_MARKET } from "@/lib/market";
+import { LanguageSelector } from "@/hooks/useLanguage";
 
 const items = [
   { title: "Dashboard", to: "/dashboard", icon: ChartArea },
@@ -30,8 +34,10 @@ const items = [
   { title: "Transferido para humano", to: "/transferido-para-humano", icon: ArrowRightLeft },
   { title: "Meus Produtos", to: "/produtos", icon: Boxes },
   { title: "Minha Loja", to: "/minha-loja", icon: Store },
-  { title: "Recarregar mensagens", to: "/recargas", icon: CreditCard },
   { title: "Tutorial", to: "/tutorial", icon: PlayCircle },
+  { title: "Plans & billing", to: "/planos", icon: CreditCard },
+  { title: "Integrations", to: "/integracoes", icon: Plug },
+  { title: "Shared Inbox", to: "/inbox", icon: MessageCircle },
 ];
 
 function SidebarContent() {
@@ -98,6 +104,7 @@ export default function DashboardShell({
       .from("profiles")
       .select("account_status")
       .eq("user_id", user.id)
+      .eq("market", GLOBAL_MARKET)
       .maybeSingle()
       .then(({ data }) => setCurrentAccountStatus(data?.account_status || accountStatus || "trial"));
   }, [accountStatus, user]);
@@ -156,6 +163,7 @@ export default function DashboardShell({
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <LanguageSelector />
               <NotificationBell />
             </div>
           </div>

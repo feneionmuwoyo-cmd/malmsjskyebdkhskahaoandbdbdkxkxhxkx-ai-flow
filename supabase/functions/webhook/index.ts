@@ -122,6 +122,7 @@ Deno.serve(async (req) => {
         await admin.from("whatsapp_contacts").upsert(
           {
             user_id: userId,
+            market: "global",
             instance_name: instanceName,
             phone_number: phoneNumber,
             name: pushName,
@@ -133,6 +134,7 @@ Deno.serve(async (req) => {
         // Save inbound message immediately (for history regardless of automation)
         await admin.from("messages").insert({
           user_id: userId,
+          market: "global",
           phone_number: phoneNumber,
           message_text: text.substring(0, 4000),
           direction: "inbound",
@@ -147,6 +149,7 @@ Deno.serve(async (req) => {
           .from("blocked_contacts")
           .select("id")
           .eq("user_id", userId)
+          .eq("market", "global")
           .eq("phone_number", phoneNumber)
           .eq("is_active", true)
           .maybeSingle();
@@ -156,6 +159,7 @@ Deno.serve(async (req) => {
           .from("whatsapp_contacts")
           .select("should_respond")
           .eq("user_id", userId)
+          .eq("market", "global")
           .eq("phone_number", phoneNumber)
           .maybeSingle();
         if (contact?.should_respond === false) continue;
@@ -165,6 +169,7 @@ Deno.serve(async (req) => {
           .from("profiles")
           .select("messages_received, message_limit, business_name, business_description, ai_name, ai_rules")
           .eq("user_id", userId)
+          .eq("market", "global")
           .maybeSingle();
         const limit = Number(profile?.message_limit || 0);
         const used = Number(profile?.messages_received || 0);

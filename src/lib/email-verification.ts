@@ -37,7 +37,10 @@ export async function verifyEmailCode(code: string, email?: string): Promise<Ver
       body: { code, email },
     });
     if (error) {
-      console.error("verify-email-code failed", error);
+      const response = "context" in error && error.context instanceof Response ? error.context : null;
+      const payload = response ? await response.clone().json().catch(() => null) as VerificationResponse | null : null;
+      if (payload?.error) return normalizeResponse(payload);
+      console.warn("verify-email-code request failed", error.message);
       return { success: false, error: error.message?.includes("401") ? "unauthorized" : "temporary_error" };
     }
     return normalizeResponse(data as VerificationResponse);
@@ -56,7 +59,10 @@ export async function resendVerificationCode(email?: string): Promise<Verificati
       body: { email },
     });
     if (error) {
-      console.error("send-verification-code failed", error);
+      const response = "context" in error && error.context instanceof Response ? error.context : null;
+      const payload = response ? await response.clone().json().catch(() => null) as VerificationResponse | null : null;
+      if (payload?.error) return normalizeResponse(payload);
+      console.warn("send-verification-code request failed", error.message);
       return { success: false, error: error.message?.includes("401") ? "unauthorized" : "temporary_error" };
     }
     return normalizeResponse(data as VerificationResponse);

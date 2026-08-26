@@ -7,7 +7,6 @@ import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import RoleRoute from "@/components/RoleRoute";
 import OnboardingGate from "@/components/OnboardingGate";
-import CreditGate from "@/components/CreditGate";
 import RoleHomeRedirect from "@/components/RoleHomeRedirect";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -19,7 +18,6 @@ import MyWhatsApp from "./pages/MyWhatsApp";
 import StoreManagement from "./pages/StoreManagement";
 import MyProducts from "./pages/MyProducts";
 import PublicStore from "./pages/PublicStore";
-import MessageTopUp from "./pages/MessageTopUp";
 import Orders from "./pages/Orders";
 import Schedule from "./pages/Schedule";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -38,13 +36,15 @@ import { TermsOfUse } from "./pages/TermsOfUse";
 import { PrivacyPolicyViewer } from "./pages/PrivacyPolicyViewer";
 import { TermsOfUseViewer } from "./pages/TermsOfUseViewer";
 import PwaLaunchGate from "./components/PwaLaunchGate";
+import { LanguageProvider } from "./hooks/useLanguage";
+import GlobalPlans from "./pages/GlobalPlans";
+import Integrations from "./pages/Integrations";
+import GlobalInbox from "./pages/GlobalInbox";
 
 const queryClient = new QueryClient();
 const protectedPage = (page: JSX.Element) => (
   <ProtectedRoute>
-    <CreditGate>
-      <OnboardingGate>{page}</OnboardingGate>
-    </CreditGate>
+    <OnboardingGate>{page}</OnboardingGate>
   </ProtectedRoute>
 );
 
@@ -53,8 +53,9 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AuthProvider>
+          <LanguageProvider>
           <PwaLaunchGate>
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -68,9 +69,7 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <RoleHomeRedirect>
-                    <CreditGate>
-                      <OnboardingGate><Dashboard /></OnboardingGate>
-                    </CreditGate>
+                    <OnboardingGate><Dashboard /></OnboardingGate>
                   </RoleHomeRedirect>
                 </ProtectedRoute>
               }
@@ -145,14 +144,9 @@ const App = () => (
             />
             <Route path="/produtos" element={protectedPage(<MyProducts />)} />
             <Route path="/tutorial" element={protectedPage(<Tutorial />)} />
-            <Route
-              path="/recargas"
-              element={
-                <ProtectedRoute>
-                  <OnboardingGate>{<MessageTopUp />}</OnboardingGate>
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/planos" element={protectedPage(<GlobalPlans />)} />
+            <Route path="/integracoes" element={protectedPage(<Integrations />)} />
+            <Route path="/inbox" element={protectedPage(<GlobalInbox />)} />
             <Route
               path="/politica-privacidade"
               element={<PrivacyPolicyViewer />}
@@ -161,6 +155,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
           </PwaLaunchGate>
+          </LanguageProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

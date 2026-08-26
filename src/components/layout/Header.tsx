@@ -3,10 +3,13 @@ import { Button } from "@/components/ui/button";
 import { useCallback } from "react";
 import logo from "../../assets/muwoyo-logo.png";
 import { useAuth } from "@/hooks/useAuth";
+import { LanguageSelector } from "@/hooks/useLanguage";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const Header = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { language } = useLanguage();
 
   console.log("Estado do usuário:", user ? "Logado" : "Não logado");
 
@@ -32,12 +35,18 @@ const Header = () => {
     navigate("/");
   }, [signOut, navigate]);
 
-  const navLinks = [
-    { href: "/#home", label: "Home", scrollTo: "home" },
+  const navLinks = language === "pt" ? [
+    { href: "/#home", label: "Início", scrollTo: "home" },
     { href: "/#funcionalidades", label: "Funcionalidades", scrollTo: "funcionalidades" },
     { href: "/#como-funciona", label: "Como funciona", scrollTo: "como-funciona" },
     { href: "/#precos", label: "Preços", scrollTo: "precos" },
     { href: "/#faq", label: "Perguntas", scrollTo: "faq" },
+  ] : [
+    { href: "/#home", label: "Home", scrollTo: "home" },
+    { href: "/#funcionalidades", label: "Features", scrollTo: "funcionalidades" },
+    { href: "/#como-funciona", label: "How It Works", scrollTo: "como-funciona" },
+    { href: "/#precos", label: "Pricing", scrollTo: "precos" },
+    { href: "/#faq", label: "FAQ", scrollTo: "faq" },
   ];
 
   const isActive = (href: string) => {
@@ -88,29 +97,30 @@ const Header = () => {
 
           {/* CTA Buttons */}
           <div className="flex items-center gap-2 shrink-0">
+            <LanguageSelector />
             {user ? (
               <button
                 className="font-medium h-9 text-xs sm:text-sm px-3 sm:px-4 bg-red-500 text-white hover:bg-red-600 rounded-md transition-colors duration-200 inline-flex items-center justify-center"
                 onClick={handleLogout}
               >
-                Sair
+                {language === "pt" ? "Sair" : "Sign out"}
               </button>
             ) : (
               <button
                 className="font-medium h-9 text-xs sm:text-sm px-3 sm:px-4 bg-transparent hover:bg-gray-100 rounded-md transition-colors duration-200 inline-flex items-center justify-center"
                 onClick={handleLoginClick}
               >
-                Entrar
+                {language === "pt" ? "Entrar" : "Sign In"}
               </button>
             )}
             <Button
               variant="hero"
-              className="px-3 sm:px-5 h-9 text-xs sm:text-sm font-semibold transition-all duration-300 btn-shimmer btn-wave"
+              className="h-9 bg-slate-900 px-3 text-xs font-semibold text-white transition-all duration-300 hover:bg-emerald-700 sm:px-5 sm:text-sm"
               onClick={() => {
                 navigate("/criar-conta");
               }}
             >
-              Criar Conta
+              {language === "pt" ? "Criar conta" : "Create account"}
             </Button>
           </div>
         </div>

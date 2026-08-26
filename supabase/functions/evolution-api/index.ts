@@ -49,14 +49,9 @@ const saveInstance = async (
   patch: Record<string, any>,
 ) => {
   await admin.from("instances").upsert(
-    { user_id: userId, instance_name: instanceName, ...patch },
+    { user_id: userId, instance_name: instanceName, market: "global", ...patch },
     { onConflict: "user_id" },
   );
-
-  const startTrialIfNeeded = async (admin: ReturnType<typeof createClient>, userId: string) => {
-    const { error } = await admin.rpc("start_trial_on_whatsapp_connection", { p_user_id: userId });
-    if (error) console.error("Could not start WhatsApp trial", error);
-  };
 };
 
 // CHECK DIRECTLY ON EVOLUTION (do NOT trust supabase)
@@ -183,7 +178,6 @@ Deno.serve(async (req) => {
         await saveInstance(admin, userId, instanceName, {
           connection_state: "open", evolution_state: "open", status: "connected",
         });
-        await startTrialIfNeeded(admin, userId);
         return json({ instanceName, connected: true, state: "open" });
       }
 
@@ -210,7 +204,6 @@ Deno.serve(async (req) => {
           await saveInstance(admin, userId, instanceName, {
             connection_state: "open", evolution_state: "open", status: "connected",
           });
-          await startTrialIfNeeded(admin, userId);
           return json({ instanceName, connected: true, state: "open" });
         }
         if (qrBase64 || qrCodeText) break;
@@ -262,7 +255,6 @@ Deno.serve(async (req) => {
         await saveInstance(admin, userId, instanceName, {
           connection_state: "open", evolution_state: "open", status: "connected", phone, phone_number: phone,
         });
-        await startTrialIfNeeded(admin, userId);
         return json({ instanceName, connected: true, state: "open" });
       }
 
@@ -304,7 +296,6 @@ Deno.serve(async (req) => {
         connection_state: state, evolution_state: raw,
         status: state === "open" ? "connected" : state === "connecting" ? "waiting_qr" : "disconnected",
       });
-      if (state === "open") await startTrialIfNeeded(admin, userId);
       return json({ instanceName, state, raw, exists: true });
     }
 
@@ -342,6 +333,19 @@ Deno.serve(async (req) => {
         imported++;
       }
       return json({ ok: true, imported });
+    }
+
+    if (normalizedAction === "sendText") {
+      const text = typeof body?.text === "string" ? body.text.trim() : "";
+      const target = typeof body?.phoneNumber === "string" ? body.phoneNumber.replace(/\D/g, "") : "";
+      if (!text || !target) return json({ error: "phone_and_text_required" }, 400);
+      const sent = await evoFetch(`/message/sendText/${encodeURIComponent(instanceName)}`, {
+        method: "POST",
+        body: JSON.stringify({ number: target, text }),
+      });
+      if (!sent.ok) return json({ error: "evolution_send_failed", details: sent.data }, 502);
+      await admin.from("messages").insert({ user_id: userId, market: "global", phone_number: target, message_text: text, direction: "outbound", kind: "text", whatsapp_instance_id: instanceName, external_id: sent.data?.key?.id || null });
+      return json({ ok: true, data: sent.data });
     }
 
 

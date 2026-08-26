@@ -23,6 +23,7 @@ import MessagesAreaChart from "@/components/MessagesAreaChart";
 import { useToast } from "@/hooks/use-toast";
 import DashboardShell from "@/components/DashboardShell";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { GLOBAL_MARKET } from "@/lib/market";
 
 interface InstanceRow {
   instance_name: string;
@@ -73,16 +74,19 @@ export default function Dashboard() {
           "instance_name, connection_state, phone, phone_number, automation_paused, automation_paused_until, status",
         )
         .eq("user_id", user.id)
+        .eq("market", GLOBAL_MARKET)
         .maybeSingle(),
       supabase
         .from("profiles")
         .select("messages_received, message_limit, account_status")
         .eq("user_id", user.id)
+        .eq("market", GLOBAL_MARKET)
         .maybeSingle(),
       supabase
         .from("messages")
         .select("id", { count: "exact", head: true })
         .eq("user_id", user.id)
+        .eq("market", GLOBAL_MARKET)
         .eq("direction", "inbound")
         .gte("created_at", start.toISOString()),
     ]);
@@ -139,7 +143,8 @@ export default function Dashboard() {
     const { error } = await supabase
       .from("instances")
       .update(patch)
-      .eq("user_id", user.id);
+      .eq("user_id", user.id)
+      .eq("market", GLOBAL_MARKET);
     setSavingPause(false);
     if (error)
       return toast({

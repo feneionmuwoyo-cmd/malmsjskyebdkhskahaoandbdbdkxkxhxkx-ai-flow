@@ -1,32 +1,597 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Bot, CalendarDays, Check, LayoutDashboard, MessageCircle, Package, ShoppingBag, Store, UsersRound } from "lucide-react";
+import {
+  ArrowRight,
+  Bot,
+  CalendarDays,
+  Check,
+  Inbox,
+  LineChart,
+  Package,
+  Plug,
+  ShoppingBag,
+  UsersRound,
+} from "lucide-react";
 import aiImage from "@/assets/landing/ai-trained-business.png";
 import storeImage from "@/assets/online-store.jpg";
-import { MessagePacks } from "@/components/home/MessagePacks";
-import FAQSection from "@/components/home/FAQSection";
+import { useLanguage } from "@/hooks/useLanguage";
 
-const steps = [["01", "Crie a sua conta", "Registe-se gratuitamente e tenha acesso ao painel Muwoyo."], ["02", "Configure o seu negócio", "Adicione produtos, serviços, horários, regras e outras informações importantes."], ["03", "Teste gratuitamente", "Receba mensagens gratuitas para experimentar o Agente de IA na prática."], ["04", "Conecte o seu WhatsApp", "Ligue o número da sua empresa à Muwoyo através da plataforma."], ["05", "Ative a sua conta", "Depois de testar e decidir continuar, faça a ativação única da plataforma."], ["06", "Recarregue quando precisar", "Escolha um pacote de mensagens de acordo com o volume do seu negócio."]];
-const capabilities = [[MessageCircle, "Atendimento com IA", "Responda perguntas frequentes, consulte informações do negócio e mantenha as conversas ativas."], [Package, "Produtos e catálogo", "Apresente produtos, preços, detalhes e disponibilidade diretamente aos clientes."], [ShoppingBag, "Pedidos", "Registe e organize os pedidos recebidos através do WhatsApp."], [CalendarDays, "Agendamentos", "Organize reservas, marcações e atendimentos de forma simples."], [UsersRound, "Gestão de clientes", "Organize leads e informações importantes das conversas."], [LayoutDashboard, "Painel Muwoyo", "Acompanhe as principais informações da sua operação num único lugar."]];
-const audiences = [[Store, "Clínicas", "Organize marcações, dúvidas frequentes e atendimento aos pacientes pelo WhatsApp."], [ShoppingBag, "Boutiques", "Apresente produtos, preços, disponibilidade e receba pedidos sem perder conversas."], [CalendarDays, "Prestadores de serviços", "Automatize informações, orçamentos, agendamentos e confirmações."], [UsersRound, "Qualquer negócio", "Se atende clientes pelo WhatsApp, pode usar a Muwoyo em qualquer nicho."]];
-const problems = [["Os clientes esperam por respostas sobre serviços e horários.", "A IA responde automaticamente com base nas informações configuradas pela empresa."], ["Os agendamentos ficam espalhados em conversas.", "A Muwoyo permite organizar horários e agendamentos dentro da própria plataforma."], ["Os pedidos chegam pelo WhatsApp e acabam esquecidos.", "A plataforma ajuda a registrar e acompanhar pedidos num só lugar."], ["A equipa perde tempo com perguntas repetitivas.", "A IA assume dúvidas frequentes e encaminha situações que precisam de uma pessoa."], ["Os clientes escrevem de formas e idiomas diferentes.", "A equipa pode configurar o atendimento para compreender melhor o público que atende, sem substituir a revisão humana quando necessário."], ["É difícil acompanhar leads e oportunidades.", "O CRM da Muwoyo organiza contactos e informações importantes das conversas."]];
-const checks = (items: string[]) => <ul className="mt-5 grid gap-3 text-[#526174] sm:grid-cols-2">{items.map((item) => <li key={item} className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#169c78]" />{item}</li>)}</ul>;
+type Item = [string, string, string];
+const en = {
+  problem:
+    "The problem isn't getting customers. It's being able to respond to all of them.",
+  problemBody:
+    "When several messages arrive at the same time, responding to every customer becomes difficult. Questions about prices, products, availability, locations and services are repeated every day. When a customer waits too long, they may simply choose another business.",
+  solution:
+    "Turn your WhatsApp into an intelligent workspace that works with your team.",
+  solutionBody:
+    "Muwoyo uses Artificial Intelligence to handle daily customer communication. Your AI Agent can answer questions, recommend products and services, organize customer information, capture leads, register orders and schedule appointments.",
+  solutionNote:
+    "Automated conversations. Without losing control of your business.",
+  solutionBold:
+    "Muwoyo doesn't replace your team. It helps your team work better.",
+  aiTitle: "An AI that understands your business.",
+  aiLead: "Your business provides the knowledge.",
+  aiBody:
+    "Add products, prices, services, opening hours, business policies and important information. Your AI Agent uses that knowledge to respond with context and according to how your business operates.",
+  learn: [
+    "Products and prices",
+    "Services and availability",
+    "Business policies",
+    "Opening hours",
+    "Payment information",
+    "Frequently asked questions",
+    "Documents and files",
+    "Custom business instructions",
+  ],
+  howTitle: "From account creation to automated conversations.",
+  howBody:
+    "Start with 3 days free or 200 credits, configure your business and put your AI Agent to work on WhatsApp.",
+  steps: [
+    [
+      "01",
+      "Create your account",
+      "Create your Muwoyo account and access your workspace.",
+    ],
+    [
+      "02",
+      "Configure your business",
+      "Add products, services, working hours and important instructions.",
+    ],
+    [
+      "03",
+      "Build your Knowledge Base",
+      "Add information manually or upload documents for your AI.",
+    ],
+    [
+      "04",
+      "Connect your WhatsApp",
+      "Connect your business WhatsApp to Muwoyo.",
+    ],
+    [
+      "05",
+      "Activate your AI Agent",
+      "Choose what your AI should do and start automating.",
+    ],
+    [
+      "06",
+      "Manage everything from one place",
+      "Monitor conversations, leads, orders, appointments and team activity.",
+    ],
+  ],
+  featuresTitle: "More than automated replies.",
+  featuresBody:
+    "Muwoyo brings together the tools your business needs to communicate, sell and organize customer conversations in one place.",
+  features: [
+    [
+      "AI Agent",
+      "Answer customer questions and keep conversations active automatically.",
+    ],
+    [
+      "Muwoyo Inbox",
+      "View conversations, respond to customers and let your team work together.",
+    ],
+    [
+      "Human Handoff",
+      "Take over a conversation when a customer needs human assistance.",
+    ],
+    ["Products & Catalog", "Manage products, prices and business information."],
+    [
+      "Orders",
+      "Capture, organize and manage orders received through WhatsApp.",
+    ],
+    [
+      "Muwoyo Calendar",
+      "Manage appointments, bookings, availability and schedules.",
+    ],
+    [
+      "Contacts & Leads",
+      "Organize customer information and sales opportunities.",
+    ],
+    [
+      "Pipeline",
+      "Track leads from first contact to qualified opportunity and customer.",
+    ],
+    [
+      "Notifications",
+      "Stay informed when customers need attention or appointments are created.",
+    ],
+    [
+      "Analytics",
+      "Track messages, AI responses, activity, usage and business performance.",
+    ],
+  ],
+  workspace: "Your workspace is ready from day one.",
+  workspaceBody:
+    "Muwoyo already includes the core tools your business needs to manage customer communication, leads, orders and appointments. Everything works together by default.",
+  integrations: "Connect other tools only when you need them.",
+  integrationBody:
+    "Muwoyo works as a complete platform on its own. Connect the tools your business already uses to keep information and workflows synchronized.",
+  audiences: [
+    [
+      "Clinics",
+      "Manage appointments, common questions and patient communication.",
+    ],
+    [
+      "Online Stores",
+      "Present products, answer questions, manage orders and assist customers.",
+    ],
+    [
+      "Service Businesses",
+      "Automate information, bookings, quotations and follow-ups.",
+    ],
+    [
+      "Sales Teams",
+      "Capture leads, organize opportunities and keep conversations moving.",
+    ],
+    [
+      "Any Business",
+      "If your customers use WhatsApp to contact your business, Muwoyo can help.",
+    ],
+  ],
+  pricing: "Start free. Upgrade when you're ready.",
+  pricingBody:
+    "Try Muwoyo for 3 days and explore how your AI Agent, WhatsApp automation and workspace can work for your business.",
+  plans: [
+    [
+      "STARTER",
+      "$29",
+      "For small businesses getting started.",
+      [
+        "1 WhatsApp number",
+        "1 AI Agent",
+        "1 user",
+        "Muwoyo Inbox",
+        "Knowledge Base",
+        "Contacts, products, orders and calendar",
+      ],
+    ],
+    [
+      "GROWTH",
+      "$59",
+      "For growing businesses and team collaboration.",
+      [
+        "1 WhatsApp number",
+        "Up to 3 team members",
+        "Shared Inbox and human handoff",
+        "Knowledge Base and OCR",
+        "Pipeline, Sheets and analytics",
+        "Shopify and WooCommerce",
+      ],
+    ],
+    [
+      "PRO",
+      "$99",
+      "For larger teams and advanced workflows.",
+      [
+        "Up to 3 WhatsApp numbers",
+        "Up to 10 team members",
+        "Multiple AI Agents",
+        "Advanced automation and OCR",
+        "All integrations, API and webhooks",
+        "Priority support",
+      ],
+    ],
+  ],
+  faqTitle: "Frequently Asked Questions",
+  faqs: [
+    [
+      "Is there a free trial?",
+      "Yes. You can try Muwoyo for 3 days before choosing a subscription plan.",
+    ],
+    [
+      "Do I need Google Calendar?",
+      "No. Muwoyo includes its own scheduling system. Google Calendar is optional.",
+    ],
+    [
+      "How does the AI learn about my business?",
+      "Add products, services, prices, policies, working hours and documents to your Knowledge Base.",
+    ],
+    [
+      "Can I upload documents?",
+      "Yes. Muwoyo extracts relevant text from uploaded content for your AI Agent.",
+    ],
+    [
+      "Can my team take over a conversation?",
+      "Yes. A team member can take control while the AI pauses for that customer.",
+    ],
+    [
+      "Do I need external integrations?",
+      "No. Muwoyo works as a complete platform. Integrations are optional.",
+    ],
+  ],
+};
+const pt = {
+  ...en,
+  problem:
+    "O problema não é conseguir clientes. É conseguir responder a todos.",
+  problemBody:
+    "Quando várias mensagens chegam ao mesmo tempo, responder a cada cliente torna-se difícil. Perguntas sobre preços, produtos, disponibilidade, localização e serviços repetem-se todos os dias. Quando um cliente espera demasiado, pode escolher outra empresa.",
+  solution:
+    "Transforme o seu WhatsApp num espaço inteligente que trabalha com a sua equipa.",
+  solutionBody:
+    "A Muwoyo usa Inteligência Artificial para tratar da comunicação diária com os clientes. O seu Agente IA responde a perguntas, recomenda produtos e serviços, organiza informações, capta leads, regista pedidos e agenda atendimentos.",
+  solutionNote:
+    "Conversas automatizadas. Sem perder o controlo do seu negócio.",
+  solutionBold:
+    "A Muwoyo não substitui a sua equipa. Ajuda a sua equipa a trabalhar melhor.",
+  aiTitle: "Uma IA que entende o seu negócio.",
+  aiLead: "A sua empresa fornece o conhecimento.",
+  aiBody:
+    "Adicione produtos, preços, serviços, horários, políticas e informações importantes. O seu Agente IA usa esse conhecimento para responder com contexto.",
+  howTitle: "Da criação da conta às conversas automatizadas.",
+  howBody:
+    "Comece com 3 dias grátis ou 200 créditos, configure o seu negócio e coloque o Agente IA a trabalhar no WhatsApp.",
+  featuresTitle: "Muito mais do que respostas automáticas.",
+  featuresBody:
+    "A Muwoyo reúne as ferramentas necessárias para comunicar, vender e organizar as conversas num só lugar.",
+  workspace: "O seu espaço de trabalho está pronto desde o primeiro dia.",
+  workspaceBody:
+    "A Muwoyo já inclui as ferramentas essenciais para comunicação, leads, pedidos e agendamentos. Tudo funciona em conjunto por defeito.",
+  integrations: "Ligue outras ferramentas apenas quando precisar.",
+  integrationBody:
+    "A Muwoyo funciona como uma plataforma completa. Ligue as ferramentas que a sua empresa já utiliza para sincronizar informações e fluxos de trabalho.",
+  pricing: "Comece grátis. Faça upgrade quando estiver pronto.",
+  pricingBody:
+    "Experimente a Muwoyo durante 3 dias e descubra como o Agente IA, a automação WhatsApp e o seu espaço de trabalho podem ajudar o seu negócio.",
+  faqTitle: "Perguntas frequentes",
+  faqs: [
+    [
+      "Existe um teste gratuito?",
+      "Sim. Pode experimentar a Muwoyo durante 3 dias antes de escolher um plano.",
+    ],
+    [
+      "Preciso do Google Calendar?",
+      "Não. A Muwoyo inclui o seu próprio sistema de agendamento. Google Calendar é opcional.",
+    ],
+    [
+      "Como a IA aprende sobre o meu negócio?",
+      "Adicione produtos, serviços, preços, políticas, horários e documentos à Base de Conhecimento.",
+    ],
+    [
+      "Posso carregar documentos?",
+      "Sim. A Muwoyo extrai o texto relevante para o seu Agente IA.",
+    ],
+    [
+      "A minha equipa pode assumir uma conversa?",
+      "Sim. Um membro pode assumir a conversa enquanto a IA pausa para esse cliente.",
+    ],
+    [
+      "Preciso de integrações externas?",
+      "Não. A Muwoyo funciona como plataforma completa. As integrações são opcionais.",
+    ],
+  ],
+};
+
+const iconMap = [
+  Bot,
+  Inbox,
+  UsersRound,
+  Package,
+  ShoppingBag,
+  CalendarDays,
+  UsersRound,
+  LineChart,
+  BellIcon,
+  LineChart,
+];
+function BellIcon() {
+  return <Plug className="h-5 w-5" />;
+}
 
 export default function LandingContent() {
-  return <>
-    <section id="features" className="py-20 lg:py-28"><div className="container mx-auto max-w-6xl px-6"><p className="text-sm font-semibold uppercase tracking-wider text-[#169c78]">O problema</p><h2 className="mt-3 max-w-3xl text-3xl font-bold tracking-tight text-[#142235] md:text-5xl">O problema não é receber clientes. É conseguir responder a todos.</h2><div className="mt-5 max-w-3xl space-y-4 text-lg leading-relaxed text-[#526174]"><p>Quando várias mensagens chegam ao mesmo tempo, responder a cada cliente pode tornar-se difícil. Perguntas sobre preços, produtos, disponibilidade, localização, horários e serviços repetem-se todos os dias.</p><p>Enquanto a equipa tenta acompanhar todas as conversas, algumas mensagens ficam sem resposta. E quando um cliente espera demasiado, pode simplesmente procurar outra empresa.</p></div></div></section>
-    <section className="bg-[#eaf7ef] py-20 lg:py-28"><div className="container mx-auto max-w-6xl px-6"><p className="text-sm font-semibold uppercase tracking-wider text-[#169c78]">A solução</p><h2 className="mt-3 max-w-3xl text-3xl font-bold tracking-tight text-[#142235] md:text-5xl">A solução é transformar o seu WhatsApp num canal inteligente que trabalha com a sua equipa.</h2><p className="mt-5 max-w-3xl text-lg leading-relaxed text-[#526174]">A Muwoyo utiliza Inteligência Artificial para assumir parte do atendimento diário. A IA pode responder perguntas, apresentar produtos e serviços, organizar informações, ajudar a receber pedidos, agendar atendimentos e manter as conversas ativas.</p><p className="mt-4 max-w-3xl text-lg leading-relaxed text-[#526174]">Enquanto a Muwoyo cuida das tarefas repetitivas, a sua equipa pode concentrar-se nos clientes e situações que realmente precisam de atenção humana.</p><div className="mt-7 border-l-2 border-[#5dce8d] pl-5 font-semibold text-[#142235]">Atendimento automatizado. Sem perder o controlo da sua empresa.<p className="mt-2 text-[#169c78]">A Muwoyo não substitui a sua equipa. Ajuda a sua equipa a trabalhar melhor.</p></div></div></section>
-    <section id="funcionalidades" className="bg-[#f8faf9] py-20 lg:py-28"><div className="container mx-auto grid max-w-6xl items-center gap-12 px-6 lg:grid-cols-2"><motion.div initial={{ opacity: 0, x: -24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}><img src={aiImage} alt="IA Muwoyo adaptada ao negócio" className="w-full rounded-2xl border border-[#e6ece9] bg-white object-contain shadow-sm" /></motion.div><div><p className="text-sm font-semibold uppercase tracking-wider text-[#169c78]">Inteligência Artificial</p><h2 className="mt-3 text-3xl font-bold tracking-tight text-[#142235] md:text-4xl">Uma IA que conhece o seu negócio.</h2><p className="mt-2 text-xl font-semibold text-[#169c78]">A sua empresa fornece o conhecimento.</p><p className="mt-5 text-lg leading-relaxed text-[#526174]">Adicione produtos, preços, serviços, horários, regras, formas de pagamento e outras informações importantes. A IA utiliza esses dados para responder aos clientes com contexto e de acordo com a forma como o seu negócio funciona.</p>{checks(["Produtos e preços", "Serviços e horários", "Regras de atendimento", "Formas de pagamento"])}<p className="mt-6 font-semibold text-[#142235]">A sua empresa mantém a sua identidade. A Muwoyo automatiza o trabalho repetitivo.</p></div></div></section>
-    <section id="como-funciona" className="bg-[#eaf7ef] py-16 text-[#142235] lg:py-20"><div className="container mx-auto max-w-6xl px-6"><p className="text-sm font-semibold uppercase tracking-wider text-[#169c78]">Como funciona</p><h2 className="mt-3 text-3xl font-bold md:text-5xl">Da criação da conta ao atendimento automatizado.</h2><p className="mt-5 max-w-3xl text-lg text-[#526174]">Comece gratuitamente, configure o seu negócio e coloque a automação a trabalhar no seu WhatsApp.</p><div className="relative mt-10 grid gap-7 sm:grid-cols-2 lg:grid-cols-3">{steps.map(([number, title, description]) => <div key={number} className="border-t border-[#b8ddc5] pt-5"><span className="text-sm font-bold text-[#169c78]">{number}</span><h3 className="mt-3 font-semibold">{title}</h3><p className="mt-2 text-sm leading-relaxed text-[#526174]">{description}</p></div>)}</div><Link to="/criar-conta" className="mt-8 inline-flex items-center gap-2 rounded-xl bg-[#169c78] px-6 py-3 font-semibold text-white hover:bg-[#128565]">Criar conta gratuitamente <ArrowRight className="h-4 w-4" /></Link></div></section>
-    <section className="bg-[#f8faf9] py-20 lg:py-28"><div className="container mx-auto max-w-6xl px-6"><p className="text-sm font-semibold uppercase tracking-wider text-[#169c78]">Capacidades</p><h2 className="mt-3 text-3xl font-bold text-[#142235] md:text-5xl">Muito mais do que responder mensagens.</h2><p className="mt-5 max-w-3xl text-lg text-[#526174]">A Muwoyo reúne ferramentas para ajudar a sua empresa a atender, vender e organizar o trabalho num único lugar.</p><div className="mt-10 grid gap-x-10 gap-y-8 sm:grid-cols-2">{capabilities.map(([Icon, title, description]) => <div key={title as string} className="flex items-start gap-4 border-t border-[#e3e9e5] pt-5"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#ddf4e5] text-[#169c78]"><Icon className="h-5 w-5" /></span><div><h3 className="font-semibold text-[#142235]">{title as string}</h3><p className="mt-1 text-sm leading-relaxed text-[#526174]">{description as string}</p></div></div>)}</div></div></section>
-    <section className="py-20 lg:py-24"><div className="container mx-auto max-w-6xl px-6"><p className="text-sm font-semibold uppercase tracking-wider text-[#169c78]">Para quem é</p><h2 className="mt-3 max-w-3xl text-3xl font-bold text-[#142235] md:text-4xl">Feita para negócios que vendem e atendem pelo WhatsApp.</h2><p className="mt-5 max-w-3xl text-lg text-[#526174]">A Muwoyo adapta-se a diferentes tipos de negócio e ajuda a automatizar tarefas de atendimento, vendas e organização.</p><div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">{audiences.map(([Icon, title, description]) => <div key={title as string} className="border-t border-[#e3e9e5] pt-5"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#eaf7ef] text-[#169c78]"><Icon className="h-5 w-5" /></span><h3 className="mt-4 font-semibold text-[#142235]">{title as string}</h3><p className="mt-2 text-sm leading-relaxed text-[#526174]">{description as string}</p></div>)}</div><p className="mt-8 font-semibold text-[#169c78]">Se os seus clientes utilizam WhatsApp para falar com a sua empresa, a Muwoyo pode ajudar.</p></div></section>
-    <section className="bg-[#eaf7ef] py-16 lg:py-20"><div className="container mx-auto max-w-6xl px-6"><p className="text-sm font-semibold uppercase tracking-wider text-[#169c78]">Tudo num só lugar</p><h2 className="mt-3 max-w-3xl text-3xl font-bold text-[#142235] md:text-4xl">A sua operação já vem pronta na Muwoyo.</h2><p className="mt-5 max-w-3xl text-lg leading-relaxed text-[#526174]">Não precisa conectar Google Sheets, Calendar ou outras integrações externas para começar. A Muwoyo já inclui ferramentas próprias para atendimento com IA, cadastro de clientes e produtos, pedidos, agendamentos e uma loja online.</p><div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{[[Bot, "Atender clientes", "Automatize conversas."], [UsersRound, "Gerir clientes", "Organize leads."], [Package, "Gerir produtos", "Cadastre preços e detalhes."], [ShoppingBag, "Organizar pedidos", "Registe e acompanhe pedidos."], [CalendarDays, "Gerir agendamentos", "Organize horários e reservas."], [Store, "Criar uma loja online", "Uma loja gratuita e personalizável."]].map(([Icon, title, description]) => <div key={title as string} className="flex items-start gap-3 border-b border-[#b8ddc5] pb-5"><Icon className="mt-1 h-5 w-5 shrink-0 text-[#169c78]" /><div><h3 className="font-semibold text-[#142235]">{title as string}</h3><p className="mt-1 text-sm text-[#526174]">{description as string}</p></div></div>)}</div></div></section>
-    <section className="bg-white py-20 lg:py-24"><div className="container mx-auto grid max-w-6xl items-center gap-10 px-6 lg:grid-cols-2"><div className="overflow-hidden rounded-2xl border border-[#e3e9e5] bg-[#f8faf9] p-3"><img src={storeImage} alt="Loja online personalizada da Muwoyo" className="w-full rounded-xl object-cover" /></div><div><p className="text-sm font-semibold uppercase tracking-wider text-[#169c78]">Loja online</p><h2 className="mt-3 text-3xl font-bold text-[#142235] md:text-4xl">Uma loja online gratuita e personalizável.</h2><p className="mt-5 text-lg leading-relaxed text-[#526174]">Além da automação de atendimento e vendas no WhatsApp, a Muwoyo oferece uma loja online totalmente gratuita. Personalize a identidade visual, cadastre produtos, partilhe o link ou QR Code e mantenha tudo ligado ao seu atendimento.</p>{checks(["Sem custo adicional", "Identidade visual", "Produtos cadastrados", "Link exclusivo", "QR Code", "Ligação ao WhatsApp"])}<div className="mt-6 border-l-2 border-[#5dce8d] pl-4"><p className="font-semibold text-[#142235]">A loja cresce consigo e pode ser personalizada sempre que o seu negócio mudar.</p></div><Link to="/criar-conta" className="mt-7 inline-flex rounded-xl bg-[#169c78] px-6 py-3 font-semibold text-white hover:bg-[#128565]">Criar a minha conta gratuitamente</Link></div></div></section>
-    <section className="bg-[#f8faf9] py-20 lg:py-24"><div className="container mx-auto max-w-6xl px-6"><p className="text-sm font-semibold uppercase tracking-wider text-[#169c78]">Problemas reais. Soluções reais.</p><h2 className="mt-3 max-w-3xl text-3xl font-bold text-[#142235] md:text-4xl">O que a Muwoyo ajuda a resolver no dia a dia.</h2><p className="mt-5 max-w-3xl text-lg leading-relaxed text-[#526174]">Uma empresa não perde oportunidades apenas por falta de clientes. Muitas vezes, perde porque demora a responder, esquece um contacto ou não acompanha um pedido.</p><div className="mt-10 space-y-7">{problems.map(([problem, solution]) => <div key={problem} className="grid gap-3 border-t border-[#e3e9e5] pt-6 md:grid-cols-2"><p className="font-bold text-[#142235]">{problem}</p><p className="leading-relaxed text-[#526174]"><strong className="text-[#169c78]">Como a Muwoyo ajuda:</strong> {solution}</p></div>)}</div><h3 className="mt-10 text-2xl font-bold text-[#142235]">O objetivo não é adicionar mais uma ferramenta. É fazer mais com menos trabalho.</h3></div></section>
-    <section className="py-20 lg:py-24"><div className="container mx-auto max-w-6xl px-6"><p className="text-sm font-semibold uppercase tracking-wider text-[#169c78]">Comunidade Muwoyo</p><h2 className="mt-3 text-3xl font-bold text-[#142235] md:text-4xl">Faça parte da Comunidade Muwoyo.</h2><p className="mt-5 max-w-3xl text-lg leading-relaxed text-[#526174]">Aprenda, partilhe experiências, descubra novidades e evolua com outros empreendedores que utilizam tecnologia para melhorar os seus negócios.</p><div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">{[[UsersRound, "Aprenda", "Estratégias e boas práticas."], [MessageCircle, "Partilhe", "Experiências e ideias."], [Package, "Descubra", "Novidades e funcionalidades."], [Bot, "Evolua", "Tecnologia aplicada aos negócios."]].map(([Icon, title, description]) => <div key={title as string} className="border-t border-[#e3e9e5] pt-5"><Icon className="h-5 w-5 text-[#169c78]" /><h3 className="mt-3 font-semibold text-[#142235]">{title as string}</h3><p className="mt-1 text-sm text-[#526174]">{description as string}</p></div>)}</div><a href="https://wa.me/244928663898" target="_blank" rel="noreferrer" className="mt-8 inline-flex rounded-xl bg-[#169c78] px-6 py-3 font-semibold text-white hover:bg-[#128565]">Juntar-me à comunidade</a></div></section>
-    <section id="precos" className="bg-[#eaf7ef] py-20 lg:py-24"><div className="container mx-auto max-w-6xl px-6"><p className="text-sm font-semibold uppercase tracking-wider text-[#169c78]">Oferta Muwoyo</p><h2 className="mt-3 max-w-3xl text-3xl font-bold text-[#142235] md:text-5xl">Comece gratuitamente. Ative quando estiver pronto.</h2><p className="mt-5 max-w-3xl text-lg leading-relaxed text-[#526174]">Crie a sua conta, configure o seu negócio e teste o Agente de IA antes de fazer qualquer pagamento.</p><div className="mt-10 grid gap-6 rounded-2xl border border-[#b8ddc5] bg-white p-6 lg:grid-cols-3 lg:p-8"><div><p className="text-sm font-bold uppercase tracking-wider text-[#169c78]">Teste antes de pagar</p><p className="mt-3 text-4xl font-bold text-[#142235]">50 mensagens grátis</p><p className="mt-3 text-[#526174]">Conta gratuita, painel e configuração inicial para testar o Agente de IA.</p></div><div className="border-t border-[#e3e9e5] pt-6 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0"><p className="text-sm font-bold uppercase tracking-wider text-[#169c78]">Ativação única</p><p className="mt-3 text-4xl font-bold text-[#142235]">22.500 Kz</p><p className="mt-3 text-[#526174]">Pagamento único. Sem mensalidade obrigatória.</p></div><div className="border-t border-[#e3e9e5] pt-6 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0"><p className="text-sm font-bold uppercase tracking-wider text-[#169c78]">Bónus após ativação</p><p className="mt-3 text-4xl font-bold text-[#142235]">+200 mensagens</p><p className="mt-3 text-[#526174]">Receba mais 200 mensagens gratuitas e recarregue somente quando precisar.</p></div></div><p className="mt-8 font-semibold text-[#169c78]">50 mensagens grátis → Teste a Muwoyo → 22.500 Kz → +200 mensagens → Recarregue quando precisar.</p><Link to="/criar-conta" className="mt-8 inline-flex rounded-xl bg-[#169c78] px-6 py-3 font-semibold text-white hover:bg-[#128565]">Criar conta e começar gratuitamente</Link></div></section>
-    <MessagePacks />
-    <div id="faq"><FAQSection /></div>
-    <section className="bg-[#eaf7ef] py-20 text-center text-[#142235] lg:py-24"><div className="container mx-auto max-w-4xl px-6"><h2 className="text-3xl font-bold md:text-5xl">O seu próximo cliente não deveria esperar pela sua resposta.</h2><p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-[#526174]">Crie a sua conta gratuitamente, configure o seu negócio e experimente o Agente de IA na prática.</p><div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row"><Link to="/criar-conta" className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#169c78] px-7 py-3 font-bold text-white hover:bg-[#128565]">Criar conta gratuitamente <ArrowRight className="h-4 w-4" /></Link><a href="https://wa.me/244928663898" target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#169c78] px-7 py-3 font-bold text-[#169c78] hover:bg-[#d8f2e2]"><MessageCircle className="h-4 w-4" />Falar com a equipa</a></div></div></section>
-  </>;
+  const { language } = useLanguage();
+  const c = language === "pt" ? pt : en;
+  const capabilities = c.features;
+  return (
+    <>
+      <section className="bg-white px-6 py-20 lg:py-28">
+        <div className="mx-auto max-w-6xl">
+          <p className="eyebrow">The problem</p>
+          <h2 className="section-title">{c.problem}</h2>
+          <p className="section-copy">{c.problemBody}</p>
+        </div>
+      </section>
+      <section className="bg-[#eaf7ef] px-6 py-20 lg:py-28">
+        <div className="mx-auto max-w-6xl">
+          <p className="eyebrow">The solution</p>
+          <h2 className="section-title">{c.solution}</h2>
+          <p className="section-copy">{c.solutionBody}</p>
+          <div className="mt-8 border-l-2 border-emerald-400 pl-5 font-semibold text-slate-900">
+            {c.solutionNote}
+            <p className="mt-2 text-emerald-700">{c.solutionBold}</p>
+          </div>
+        </div>
+      </section>
+      <section
+        id="funcionalidades"
+        className="bg-[#f8faf9] px-6 py-20 lg:py-28"
+      >
+        <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+          >
+            <img
+              src={aiImage}
+              alt="Muwoyo AI Knowledge Base"
+              className="w-full rounded-2xl border border-[#e6ece9] bg-white shadow-sm"
+            />
+          </motion.div>
+          <div>
+            <p className="eyebrow">Artificial Intelligence</p>
+            <h2 className="section-title text-4xl">{c.aiTitle}</h2>
+            <p className="mt-3 text-xl font-semibold text-emerald-700">
+              {c.aiLead}
+            </p>
+            <p className="section-copy">{c.aiBody}</p>
+            <ul className="mt-6 grid gap-3 text-slate-600 sm:grid-cols-2">
+              {c.learn.map((item) => (
+                <li key={item} className="flex gap-2">
+                  <Check className="h-4 w-4 shrink-0 text-emerald-600" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+      <section id="como-funciona" className="bg-[#eaf7ef] px-6 py-20">
+        <div className="mx-auto max-w-6xl">
+          <p className="eyebrow">How it works</p>
+          <h2 className="section-title">{c.howTitle}</h2>
+          <p className="section-copy">{c.howBody}</p>
+          <div className="mt-10 grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
+            {c.steps.map(([number, title, description]) => (
+              <div key={number} className="border-t border-[#b8ddc5] pt-5">
+                <span className="font-bold text-emerald-700">{number}</span>
+                <h3 className="mt-3 font-semibold text-slate-900">{title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                  {description}
+                </p>
+              </div>
+            ))}
+          </div>
+          <Link
+            to="/criar-conta"
+            className="mt-9 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 font-semibold text-white hover:bg-emerald-700"
+          >
+            {language === "pt"
+              ? "Começar teste gratuito de 3 dias"
+              : "Start Your 3-Day Free Trial"}
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </section>
+      <section className="bg-white px-6 py-20 lg:py-28">
+        <div className="mx-auto max-w-6xl">
+          <p className="eyebrow">Features</p>
+          <h2 className="section-title">{c.featuresTitle}</h2>
+          <p className="section-copy">{c.featuresBody}</p>
+          <div className="mt-10 grid gap-x-10 gap-y-8 sm:grid-cols-2">
+            {capabilities.map(([title, description], index) => {
+              const Icon = iconMap[index];
+              return (
+                <div
+                  key={title}
+                  className="flex items-start gap-4 border-t border-slate-200 pt-5"
+                >
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
+                    <Icon />
+                  </span>
+                  <div>
+                    <h3 className="font-semibold text-slate-900">{title}</h3>
+                    <p className="mt-1 text-sm leading-relaxed text-slate-600">
+                      {description}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+      <section className="bg-[#eaf7ef] px-6 py-20">
+        <div className="mx-auto max-w-6xl">
+          <p className="eyebrow">Everything in one place</p>
+          <h2 className="section-title">{c.workspace}</h2>
+          <p className="section-copy">{c.workspaceBody}</p>
+          <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              "AI Agent",
+              "Muwoyo Inbox",
+              "Contacts & Leads",
+              "Products",
+              "Orders",
+              "Muwoyo Calendar",
+              "Muwoyo Sheets",
+              "Analytics",
+            ].map((item) => (
+              <div
+                key={item}
+                className="border-b border-[#b8ddc5] pb-4 font-semibold text-slate-900"
+              >
+                {item}
+                <p className="mt-1 text-sm font-normal text-slate-600">
+                  {language === "pt"
+                    ? "Funciona em conjunto por defeito."
+                    : "Works together by default."}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      <section className="bg-white px-6 py-20">
+        <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-2">
+          <div>
+            <p className="eyebrow">Integrations</p>
+            <h2 className="section-title text-4xl">{c.integrations}</h2>
+            <p className="section-copy">{c.integrationBody}</p>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              {[
+                ["Shopify", "https://cdn.simpleicons.org/shopify/95BF47"],
+                ["WooCommerce", "https://cdn.simpleicons.org/woocommerce/96588A"],
+                ["HubSpot", "https://cdn.simpleicons.org/hubspot/FF7A59"],
+                ["Google Calendar", "https://cdn.simpleicons.org/googlecalendar/4285F4"],
+              ].map(([name, logo]) => (
+                  <div
+                    key={name}
+                    className="flex items-center gap-3 rounded-xl border border-slate-200 p-4 font-semibold"
+                  >
+                    <img src={logo} alt={`${name} logo`} className="h-6 w-6 object-contain" />
+                    {name}
+                  </div>
+                ))}
+            </div>
+          </div>
+        </div>
+      </section>
+      <section className="bg-[#f8faf9] px-6 py-20">
+        <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-2">
+          <img src={storeImage} alt="Muwoyo online store" className="w-full rounded-2xl border border-slate-200" />
+          <div>
+            <p className="eyebrow">{language === "pt" ? "Muwoyo Store" : "Muwoyo Store"}</p>
+            <h2 className="section-title text-4xl">{language === "pt" ? "Um espaço completo para a sua loja online." : "A complete workspace for your online store."}</h2>
+            <p className="section-copy">{language === "pt" ? "Gira produtos, pedidos e conversas com clientes num só lugar. A sua loja, a Inbox e o Agente IA trabalham em conjunto desde o primeiro dia." : "Manage products, orders and customer conversations in one place. Your store, Inbox and AI Agent work together from day one."}</p>
+          </div>
+        </div>
+      </section>
+      <section className="bg-[#f8faf9] px-6 py-20">
+        <div className="mx-auto max-w-6xl">
+          <p className="eyebrow">Who is Muwoyo for?</p>
+          <h2 className="section-title text-4xl">
+            Built for businesses that sell and support customers on WhatsApp.
+          </h2>
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
+            {c.audiences.map(([title, description]) => (
+              <div key={title} className="border-t border-slate-200 pt-5">
+                <UsersRound className="h-5 w-5 text-emerald-600" />
+                <h3 className="mt-3 font-semibold">{title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                  {description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+      <section id="precos" className="bg-[#eaf7ef] px-6 py-20 lg:py-28">
+        <div className="mx-auto max-w-6xl">
+          <p className="eyebrow">Pricing</p>
+          <h2 className="section-title">{c.pricing}</h2>
+          <p className="section-copy">{c.pricingBody}</p>
+          <div className="mt-10 grid gap-6 lg:grid-cols-3">
+            {c.plans.map(([name, price, description, features], index) => (
+              <div
+                key={name}
+                className={`rounded-2xl border bg-white p-7 ${index === 1 ? "border-emerald-500 shadow-lg" : "border-slate-200"}`}
+              >
+                {index === 1 && (
+                  <p className="mb-3 text-xs font-bold uppercase tracking-widest text-emerald-700">
+                    Most Popular
+                  </p>
+                )}
+                <h3 className="text-lg font-bold">{name}</h3>
+                <p className="mt-3 text-4xl font-extrabold">
+                  {price}
+                  <small className="text-sm font-normal text-slate-500">
+                    {" "}
+                    / month
+                  </small>
+                </p>
+                <p className="mt-3 min-h-10 text-sm text-slate-600">
+                  {description}
+                </p>
+                <ul className="mt-6 space-y-3 text-sm text-slate-600">
+                  {features.map((feature) => (
+                    <li key={feature} className="flex gap-2">
+                      <Check className="h-4 w-4 shrink-0 text-emerald-600" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  to="/criar-conta"
+                  className="mt-7 inline-flex w-full justify-center rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white hover:bg-emerald-700"
+                >
+                  {language === "pt"
+                    ? "Começar teste de 3 dias"
+                    : "Start 3-Day Free Trial"}
+                </Link>
+              </div>
+            ))}
+          </div>
+          <p className="mt-8 font-semibold text-emerald-700">
+            {language === "pt"
+              ? "Sem taxas de configuração. Preço mensal simples."
+              : "No setup fees. Simple monthly pricing."}
+          </p>
+        </div>
+      </section>
+      <section id="faq" className="bg-white px-6 py-20">
+        <div className="mx-auto max-w-4xl">
+          <p className="eyebrow">FAQ</p>
+          <h2 className="section-title">{c.faqTitle}</h2>
+          <p className="section-copy">
+            Everything you need to know about Muwoyo.
+          </p>
+          <div className="mt-10 divide-y divide-slate-200">
+            {c.faqs.map(([question, answer]) => (
+              <details key={question} className="py-5">
+                <summary className="cursor-pointer font-semibold text-slate-900">
+                  {question}
+                </summary>
+                <p className="mt-3 leading-relaxed text-slate-600">{answer}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+      <section className="bg-[#eaf7ef] px-6 py-20 text-center lg:py-28">
+        <div className="mx-auto max-w-4xl">
+          <h2 className="section-title">
+            {language === "pt"
+              ? "O seu próximo cliente não deveria esperar pela sua resposta."
+              : "Your next customer shouldn't have to wait for your reply."}
+          </h2>
+          <p className="section-copy mx-auto">
+            {language === "pt"
+              ? "Crie a sua conta, configure o seu negócio e veja como o Agente IA pode ajudar."
+              : "Create your account, configure your business and see how an AI Agent can help automate your customer conversations."}
+          </p>
+          <Link
+            to="/criar-conta"
+            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-7 py-3 font-bold text-white hover:bg-emerald-700"
+          >
+            {language === "pt"
+              ? "Começar teste gratuito"
+              : "Start Your 3-Day Free Trial"}
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </section>
+    </>
+  );
 }

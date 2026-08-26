@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { isSupabaseConfigured, supabase } from "@/integrations/supabase/client";
+import { GLOBAL_MARKET, getUserMarket } from "@/lib/market";
 import type { Session, User } from "@supabase/supabase-js";
 
 interface AuthCtx {
@@ -7,7 +8,7 @@ interface AuthCtx {
   session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string, meta?: { full_name?: string; phone?: string }) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, meta?: { full_name?: string; phone?: string; country?: string }) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -43,8 +44,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: "O Supabase não está configurado. Defina VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY." };
     }
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      return { error: error?.message ?? null };
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) return { error: error.message };
+
+      const market = await getUserMarket(data.user.id);
+      if (market !== GLOBAL_MARKET) {
+        await supabase.auth.signOut();
+        return { error: "Esta conta pertence ao portal de Angola. Use o acesso global com uma conta global." };
+      }
+
+      return { error: null };
     } catch {
       return { error: "Não foi possível conectar ao Supabase. Verifique a URL do projeto e a sua conexão." };
     }
@@ -60,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
-          data: { full_name: meta?.full_name, phone: meta?.phone },
+          data: { full_name: meta?.full_name, phone: meta?.phone, country: meta?.country, market: GLOBAL_MARKET },
         },
       });
       return { error: error?.message ?? null };

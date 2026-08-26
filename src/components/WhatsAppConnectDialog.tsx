@@ -77,6 +77,7 @@ export default function WhatsAppConnectDialog({
       .from("instances")
       .select("instance_name")
       .eq("user_id", user.id)
+      .eq("market", "global")
       .maybeSingle();
     const existing = data?.instance_name;
     if (existing) return existing;

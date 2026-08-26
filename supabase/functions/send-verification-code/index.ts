@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         to: { email: targetEmail, name: user.user_metadata?.full_name || targetEmail },
         template_type: "otp",
-        template_data: { code },
+        template_data: { code, locale: "en" },
       }),
     });
 

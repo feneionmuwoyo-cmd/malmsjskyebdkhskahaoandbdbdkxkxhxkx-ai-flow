@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         to: { email: targetEmail, name: profile.data?.full_name || targetEmail },
         template_type: "welcome",
-        template_data: { name: profile.data?.full_name || user.email },
+        template_data: { name: profile.data?.full_name || user.email, locale: "en" },
       }),
     });
     if (!welcomeResponse.ok) console.error("Welcome email failed", welcomeResponse.status);

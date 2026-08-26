@@ -31,9 +31,8 @@ const Footer = () => {
               </span>
             </Link>
             <p className="text-background/70 text-sm leading-relaxed max-w-xs">
-              Automatize o atendimento e as vendas da sua empresa pelo WhatsApp
-              com Inteligência Artificial. Uma solução da OKAVANGO CODE criada
-              em Cabinda, Angola.
+              Turn your WhatsApp into an intelligent workspace for customer support,
+              sales, appointments and business automation, powered by AI.
             </p>
             <div className="flex items-center gap-4">
               <a
@@ -64,7 +63,7 @@ const Footer = () => {
                   to="/#funcionalidades"
                   className="text-background/70 hover:text-primary transition-colors"
                 >
-                  Funcionalidades
+                  Features
                 </Link>
               </li>
 
@@ -73,7 +72,7 @@ const Footer = () => {
                   to="/#como-funciona"
                   className="text-background/70 hover:text-primary transition-colors"
                 >
-                  Como funciona
+                  How It Works
                 </Link>
               </li>
               <li>
@@ -81,7 +80,7 @@ const Footer = () => {
                   to="/#precos"
                   className="text-background/70 hover:text-primary transition-colors"
                 >
-                  Preços
+                  Pricing
                 </Link>
               </li>
               <li>
@@ -89,7 +88,7 @@ const Footer = () => {
                   to="/criar-conta"
                   className="text-background/70 hover:text-primary transition-colors"
                 >
-                  Criar conta
+                  Start Free Trial
                 </Link>
               </li>
             </ul>
@@ -97,14 +96,14 @@ const Footer = () => {
 
           {/* Empresa */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-lg mb-4">Empresa</h3>
+            <h3 className="font-semibold text-lg mb-4">Company</h3>
             <ul className="space-y-3 text-sm">
               <li>
                 <Link
                   to="/termos-uso"
                   className="text-background/70 hover:text-primary transition-colors"
                 >
-                  Termos de Uso
+                  Terms of Service
                 </Link>
               </li>
               <li>
@@ -112,15 +111,15 @@ const Footer = () => {
                   to="/politica-privacidade"
                   className="text-background/70 hover:text-primary transition-colors"
                 >
-                  Política de Privacidade
+                  Privacy Policy
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Contato */}
+          {/* Support */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-lg mb-4">Contato</h3>
+            <h3 className="font-semibold text-lg mb-4">Support</h3>
             <ul className="space-y-3 text-sm">
               <li className="flex items-center gap-3">
                 <Mail className="w-4 h-4 text-primary" />
@@ -137,12 +136,12 @@ const Footer = () => {
                 href="https://wa.me/244928663898"
                 className="text-background/70 hover:text-primary transition-colors"
               >
-                WhatsApp: +244 928 663 898
+                Contact Support
               </a>
               </li>
               <li className="flex items-start gap-3">
                 <MapPin className="w-4 h-4 text-primary mt-0.5" />
-                <span className="text-background/70">Cabinda, Angola</span>
+                <span className="text-background/70">Global customer support</span>
               </li>
             </ul>
           </div>
@@ -150,7 +149,7 @@ const Footer = () => {
 
         <div className="border-t border-background/20 mt-16 pt-8 text-center">
           <p className="text-background/60 text-sm">
-            © 2026 Muwoyo. Todos os direitos reservados. Uma solução da OKAVANGO CODE.
+            © 2026 Muwoyo. All rights reserved.
           </p>
         </div>
       </div>
