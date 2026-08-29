@@ -1,1 +1,0 @@
--- Marker for a schema migration already present in the shared Supabase project.
