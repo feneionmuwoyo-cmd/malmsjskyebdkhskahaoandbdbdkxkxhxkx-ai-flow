@@ -89,13 +89,13 @@ export default function StoreManagement() {
   };
 
   return (
-    <DashboardShell title="Minha Loja" description="Configure a aparência, carrossel e link público da sua loja.">
-      <Card><CardHeader><CardTitle>Configuração da loja</CardTitle></CardHeader><CardContent>
+    <DashboardShell title="My Store" description="Customize your store's appearance, carousel, and public link.">
+      <Card><CardHeader><CardTitle>Store Settings</CardTitle></CardHeader><CardContent>
         <form onSubmit={saveStore} className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2"><Label>Nome da loja</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-          <div className="space-y-2"><Label>WhatsApp para checkout</Label><Input value={form.checkout_whatsapp} onChange={(e) => setForm({ ...form, checkout_whatsapp: e.target.value.replace(/\D/g, "") })} placeholder="244928663898" /></div>
-          <div className="space-y-2"><Label>Logo da loja</Label><Input type="file" accept="image/*" onChange={async (e) => { const f = e.target.files?.[0]; if (f) setForm({ ...form, logo_url: (await uploadImage(f, "logos")) || "" }); }} />{form.logo_url && <img src={form.logo_url} alt="" className="mt-2 h-12 object-contain" />}</div>
-          <div className="space-y-2 md:col-span-2"><Label>Descrição</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+          <div className="space-y-2"><Label>Store Name</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+          <div className="space-y-2"><Label>WhatsApp for Checkout</Label><Input value={form.checkout_whatsapp} onChange={(e) => setForm({ ...form, checkout_whatsapp: e.target.value.replace(/\D/g, "") })} placeholder="244928663898" /></div>
+          <div className="space-y-2"><Label>Store Logo</Label><Input type="file" accept="image/*" onChange={async (e) => { const f = e.target.files?.[0]; if (f) setForm({ ...form, logo_url: (await uploadImage(f, "logos")) || "" }); }} />{form.logo_url && <img src={form.logo_url} alt="" className="mt-2 h-12 object-contain" />}</div>
+          <div className="space-y-2 md:col-span-2"><Label>Store Description</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
           <div className="space-y-2 md:col-span-2">
             <Label>Cor do header (onde fica a logo)</Label>
             <div className="flex flex-wrap gap-2">
@@ -116,24 +116,24 @@ export default function StoreManagement() {
               ))}
             </div>
           </div>
-          <Button className="w-fit md:col-span-2">Guardar loja</Button>
+          <Button className="w-fit md:col-span-2">Save Store</Button>
         </form>
       </CardContent></Card>
 
       <Card><CardContent className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
-          <div className="font-semibold">Link público da loja</div>
+          <div className="font-semibold">Public Store Link</div>
           <div className="truncate text-sm text-muted-foreground">{storeUrl}</div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" asChild><Link to={`/loja/${store?.slug || ""}`} target="_blank"><ExternalLink className="mr-2 h-4 w-4" />Ver loja</Link></Button>
-          <Button variant="outline" onClick={() => setQrOpen(true)}><QrCode className="mr-2 h-4 w-4" />Ver QR Code</Button>
+          <Button variant="outline" asChild><Link to={`/loja/${store?.slug || ""}`} target="_blank"><ExternalLink className="mr-2 h-4 w-4" />View Store</Link></Button>
+          <Button variant="outline" onClick={() => setQrOpen(true)}><QrCode className="mr-2 h-4 w-4" />View QR Code</Button>
         </div>
       </CardContent></Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <div><CardTitle>Carrossel da loja</CardTitle><p className="text-xs text-muted-foreground">Promoções e destaques que aparecem no topo da loja.</p></div>
+          <div><CardTitle>Store Carousel</CardTitle><p className="text-xs text-muted-foreground">Promotions and featured content displayed at the top of your store.</p></div>
           <Button size="sm" onClick={() => setSlideOpen(true)}><Plus className="mr-2 h-4 w-4" />Novo slide</Button>
         </CardHeader>
         <CardContent>
@@ -150,7 +150,7 @@ export default function StoreManagement() {
                 <button onClick={() => removeSlide(s.id)} className="absolute right-2 top-2 rounded-full bg-black/40 p-1.5 text-white"><Trash2 className="h-3.5 w-3.5" /></button>
               </div>
             ))}
-            {slides.length === 0 && <div className="col-span-full py-8 text-center text-sm text-muted-foreground">Sem slides. Crie o primeiro para destacar uma promoção.</div>}
+            {slides.length === 0 && <div className="col-span-full py-8 text-center text-sm text-muted-foreground">No slides yet. Create your first slide to highlight a promotion.</div>}
           </div>
         </CardContent>
       </Card>
@@ -158,11 +158,11 @@ export default function StoreManagement() {
       {/* QR dialog */}
       <Dialog open={qrOpen} onOpenChange={setQrOpen}>
         <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>QR Code da loja</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Store QR Code</DialogTitle></DialogHeader>
           <div id="store-qr" className="flex flex-col items-center gap-4 py-2">
             <div className="rounded-lg bg-white p-4"><QRCodeCanvas value={storeUrl || "https://muwoyo.com"} size={220} /></div>
             <p className="text-center text-xs text-muted-foreground break-all">{storeUrl}</p>
-            <Button onClick={downloadQR} className="w-full"><Download className="mr-2 h-4 w-4" />Baixar QR Code</Button>
+            <Button onClick={downloadQR} className="w-full"><Download className="mr-2 h-4 w-4" />Download QR Code</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -185,7 +185,7 @@ export default function StoreManagement() {
                 ))}
               </div>
             </div>
-            <Button className="w-full">Adicionar slide</Button>
+            <Button className="w-full">Add Slide</Button>
           </form>
         </DialogContent>
       </Dialog>

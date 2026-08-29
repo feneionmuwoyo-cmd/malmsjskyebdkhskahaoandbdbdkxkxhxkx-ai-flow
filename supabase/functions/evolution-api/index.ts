@@ -35,10 +35,42 @@ const extractQrBase64 = (p: any) => p?.qrcode?.base64 || p?.base64 || p?.qr?.bas
 const extractQrText = (p: any) => p?.qrcode?.code || p?.code || p?.qr?.code || null;
 const extractPairingCode = (p: any) => p?.pairingCode || p?.code || p?.pairing?.code || null;
 
-// Get existing instance_name from supabase (do NOT auto-create)
+const stableInstanceName = (userId: string) => `Muwoyo_${userId.replace(/-/g, "").slice(0, 12).toUpperCase()}`;
+
+// Resolve the permanent name from the database; never trust a new frontend name.
 const getStoredInstanceName = async (admin: ReturnType<typeof createClient>, userId: string) => {
-  const { data: row } = await admin.from("instances").select("instance_name").eq("user_id", userId).maybeSingle();
-  return (row?.instance_name as string | undefined) || null;
+  const { data: rows } = await admin
+    .from("instances")
+    .select("instance_name")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: true })
+    .limit(1);
+  return (rows?.[0]?.instance_name as string | undefined) || stableInstanceName(userId);
+};
+
+const reserveInstance = async (admin: ReturnType<typeof createClient>, userId: string, instanceName: string) => {
+  const { data: existingRows } = await admin
+    .from("instances")
+    .select("instance_name")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: true })
+    .limit(1);
+  if (existingRows?.[0]?.instance_name) return existingRows[0].instance_name as string;
+
+  const { data: profile } = await admin.from("profiles").select("market,workspace_id").eq("user_id", userId).maybeSingle();
+  const { error } = await admin.from("instances").insert(
+    { user_id: userId, instance_name: instanceName, market: profile?.market || "angola", workspace_id: profile?.workspace_id || null },
+  );
+  if (!error) return instanceName;
+
+  // Another request may have reserved the user while this request was running.
+  const { data: reservedRows } = await admin
+    .from("instances")
+    .select("instance_name")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: true })
+    .limit(1);
+  return (reservedRows?.[0]?.instance_name as string | undefined) || null;
 };
 
 // Upsert instance row (creates if missing, updates if exists). Used after successful evolution operations.
@@ -48,8 +80,9 @@ const saveInstance = async (
   instanceName: string,
   patch: Record<string, any>,
 ) => {
+  const { data: profile } = await admin.from("profiles").select("market,workspace_id").eq("user_id", userId).maybeSingle();
   await admin.from("instances").upsert(
-    { user_id: userId, instance_name: instanceName, market: "global", ...patch },
+    { user_id: userId, instance_name: instanceName, market: profile?.market || "angola", workspace_id: profile?.workspace_id || null, ...patch },
     { onConflict: "user_id" },
   );
 };
@@ -105,8 +138,6 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const { action } = body as { action?: string };
     const phone = body?.phone || body?.phoneNumber || undefined;
-    const requestedInstanceName =
-      typeof body?.instanceName === "string" && body.instanceName.trim() ? body.instanceName.trim() : null;
 
     const normalizedAction =
       action === "connect" || action === "getQrCode" ? "createAndConnect"
@@ -118,11 +149,11 @@ Deno.serve(async (req) => {
     if (!normalizedAction) return json({ error: "missing_action" }, 400);
 
     // Reuse the user's permanent instance_name forever. Only use frontend-generated
-    // Muwoyo_XXXXXX when the user has no stored instance yet.
-    const storedInstanceName = await getStoredInstanceName(admin, userId);
-    const instanceName = storedInstanceName || requestedInstanceName;
+      // Reuse the user's permanent instance_name forever. The Edge Function owns creation.
+    const requestedInstanceName = await getStoredInstanceName(admin, userId);
+    const instanceName = await reserveInstance(admin, userId, requestedInstanceName);
     if (!instanceName) {
-      return json({ error: "instance_name_required", message: "Frontend deve enviar instanceName" }, 400);
+      return json({ error: "instance_reservation_failed" }, 409);
     }
 
     // ============================================================
@@ -167,7 +198,7 @@ Deno.serve(async (req) => {
             phone: phone || null,
             phone_number: phone || null,
             qr_code: initialQrText || initialQrBase64,
-            status: "waiting_qr",
+               status: "connecting",
           });
           return json({ instanceName, qrBase64: initialQrBase64, qrCodeText: initialQrText, state: "connecting" });
         }
@@ -225,7 +256,7 @@ Deno.serve(async (req) => {
         phone: phone || null,
         phone_number: phone || null,
         qr_code: qrCodeText || qrBase64,
-        status: "waiting_qr",
+        status: "connecting",
       });
 
       return json({ instanceName, qrBase64, qrCodeText, state: "connecting" });
@@ -273,7 +304,7 @@ Deno.serve(async (req) => {
 
       await saveInstance(admin, userId, instanceName, {
         connection_state: "connecting", evolution_state: "connecting",
-        phone, phone_number: phone, status: "waiting_qr",
+        phone, phone_number: phone, status: "connecting",
       });
 
       return json({ instanceName, pairingCode, state: "connecting" });
@@ -294,7 +325,7 @@ Deno.serve(async (req) => {
       const state = mapState(raw);
       await saveInstance(admin, userId, instanceName, {
         connection_state: state, evolution_state: raw,
-        status: state === "open" ? "connected" : state === "connecting" ? "waiting_qr" : "disconnected",
+        status: state === "open" ? "connected" : state === "connecting" ? "connecting" : "disconnected",
       });
       return json({ instanceName, state, raw, exists: true });
     }
@@ -310,13 +341,26 @@ Deno.serve(async (req) => {
       const groups = await evoFetch(`/group/fetchAllGroups/${instanceName}?getParticipants=false`);
       if (Array.isArray(groups.data)) groupCount = groups.data.length;
       if (phoneNum) {
-        await saveInstance(admin, userId, instanceName, { phone: phoneNum, phone_number: phoneNum });
+        await saveInstance(admin, userId, instanceName, {
+          phone: phoneNum,
+          phone_number: phoneNum,
+          connection_state: "open",
+          evolution_state: "open",
+          status: "connected",
+        });
+      } else {
+        await saveInstance(admin, userId, instanceName, {
+          connection_state: "open",
+          evolution_state: "open",
+          status: "connected",
+        });
       }
       return json({ phone: phoneNum, groupCount });
     }
 
     // IMPORT CONTACTS FROM EVOLUTION (skip groups)
     if (normalizedAction === "importContacts") {
+      const { data: profile } = await admin.from("profiles").select("market,workspace_id").eq("user_id", userId).maybeSingle();
       const r = await evoFetch(`/chat/findContacts/${instanceName}`, { method: "POST", body: JSON.stringify({ where: {} }) });
       const list: any[] = Array.isArray(r.data) ? r.data : (r.data?.contacts || []);
       let imported = 0;
@@ -327,7 +371,7 @@ Deno.serve(async (req) => {
         if (!phone || phone.length < 5) continue;
         const name = c?.pushName || c?.name || c?.notify || c?.verifiedBizName || null;
         await admin.from("whatsapp_contacts").upsert(
-          { user_id: userId, instance_name: instanceName, phone_number: phone, name },
+          { user_id: userId, workspace_id: profile?.workspace_id || null, market: profile?.market || "angola", instance_name: instanceName, phone_number: phone, name },
           { onConflict: "user_id,phone_number" },
         );
         imported++;

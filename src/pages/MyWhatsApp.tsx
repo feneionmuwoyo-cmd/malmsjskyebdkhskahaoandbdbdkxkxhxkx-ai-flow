@@ -90,7 +90,7 @@ export default function MyWhatsApp() {
     if (error) return toast({ title: "Não foi possível guardar o contacto", description: error.message, variant: "destructive" });
     setManualPhone("");
     setManualName("");
-    toast({ title: "Contacto adicionado" });
+    toast({ title: "Contact added" });
     load();
   };
 
@@ -125,7 +125,7 @@ export default function MyWhatsApp() {
         phone_number: c.phone_number,
         is_active: true,
       });
-    toast({ title: "Contacto bloqueado" });
+    toast({ title: "Contact blocked" });
     load();
   };
 
@@ -148,7 +148,7 @@ export default function MyWhatsApp() {
       if (error) {
         console.warn("Function importContacts not available:", error.message);
         return toast({
-          title: "Erro",
+          title: "Error",
           description: error.message,
           variant: "destructive",
         });
@@ -159,8 +159,8 @@ export default function MyWhatsApp() {
       setImporting(false);
       console.warn("Function call failed:", error);
       toast({
-        title: "Erro",
-        description: "Erro ao conectar com o servidor",
+          title: "Error",
+          description: "Unable to connect to the server",
         variant: "destructive",
       });
     }
@@ -172,8 +172,8 @@ export default function MyWhatsApp() {
 
   return (
     <DashboardShell
-      title="Meus contactos"
-      description="Contactos, regras de resposta e bloqueios da sua conta."
+      title="My Contacts"
+      description="Manage contacts, response rules, and blocked customers."
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <div className="relative flex-1">
@@ -194,7 +194,7 @@ export default function MyWhatsApp() {
           <DownloadCloud
             className={`h-4 w-4 ${importing ? "animate-bounce" : ""}`}
           />{" "}
-          {importing ? "A importar..." : "Importar do WhatsApp"}
+          {importing ? "Importing..." : "Import from WhatsApp"}
         </Button>
         <Button
           variant="outline"
@@ -203,7 +203,7 @@ export default function MyWhatsApp() {
           className="gap-2"
         >
           <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />{" "}
-          Atualizar
+          Refresh
         </Button>
       </div>
 
@@ -221,13 +221,13 @@ export default function MyWhatsApp() {
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as typeof activeTab)}>
         <TabsList className="grid w-full grid-cols-3 sm:w-auto">
           <TabsTrigger value="contacts">
-            Meus contactos ({filtered.length})
+            My Contacts ({filtered.length})
           </TabsTrigger>
           <TabsTrigger value="no-response">
-            Não responder ({filtered.filter((c) => !c.should_respond).length})
+            No AI Response ({filtered.filter((c) => !c.should_respond).length})
           </TabsTrigger>
           <TabsTrigger value="blocked">
-            Bloqueados ({filteredBlocked.length})
+            Blocked ({filteredBlocked.length})
           </TabsTrigger>
         </TabsList>
 
@@ -236,7 +236,7 @@ export default function MyWhatsApp() {
         </div>
 
         <TabsContent value="contacts" className="grid gap-3">
-          <label className="flex items-center gap-2 text-sm text-muted-foreground"><input type="checkbox" checked={allVisibleSelected} onChange={toggleAll} /> Selecionar todos os contactos visíveis</label>
+          <label className="flex items-center gap-2 text-sm text-muted-foreground"><input type="checkbox" checked={allVisibleSelected} onChange={toggleAll} /> Select All Visible Contacts</label>
           {visibleContacts.map((c) => {
             const initials = (c.name || c.phone_number)
               .slice(0, 2)
@@ -265,7 +265,7 @@ export default function MyWhatsApp() {
                     </Avatar>
                     <div className="min-w-0">
                       <div className="truncate font-semibold">
-                        {c.name || "Contacto WhatsApp"}
+                        {c.name || "WhatsApp Contact"}
                       </div>
                       <div className="truncate text-sm text-muted-foreground">
                         +{c.phone_number}

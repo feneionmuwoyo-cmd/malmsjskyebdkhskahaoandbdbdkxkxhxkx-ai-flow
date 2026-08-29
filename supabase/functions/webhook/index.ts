@@ -9,6 +9,7 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const N8N_URL = Deno.env.get("N8N_WEBHOOK_URL") || "";
+const GLOBAL_N8N_URL = Deno.env.get("N8N_GLOBAL_WEBHOOK_URL") || "https://n8n.muwoyo.com/webhook/MUWOYO%20INTERNACIONAL";
 const EVOLUTION_URL = (Deno.env.get("EVOLUTION_API_URL") || "").replace(/\/+$/, "");
 const EVOLUTION_KEY = Deno.env.get("EVOLUTION_API_KEY") || "";
 
@@ -53,13 +54,14 @@ async function fetchAudioBase64(instance: string, messageKey: any): Promise<stri
   }
 }
 
-async function dispatchToN8n(payload: any) {
-  if (!N8N_URL) {
+async function dispatchToN8n(payload: any, market: string) {
+  const targetUrl = market === "global" ? GLOBAL_N8N_URL : N8N_URL;
+  if (!targetUrl) {
     console.warn("N8N_WEBHOOK_URL not configured");
     return false;
   }
   try {
-    const res = await fetch(N8N_URL, {
+    const res = await fetch(targetUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -81,11 +83,13 @@ Deno.serve(async (req) => {
 
     const { data: inst } = await admin
       .from("instances")
-      .select("user_id, phone, automation_paused, automation_paused_until")
+      .select("user_id, workspace_id, market, phone, automation_paused, automation_paused_until")
       .eq("instance_name", instanceName)
       .maybeSingle();
     if (!inst) return ok({ ok: true, no_instance: true });
     const userId = inst.user_id as string;
+    const { data: profileMarket } = await admin.from("profiles").select("market").eq("user_id", userId).maybeSingle();
+    const market = profileMarket?.market || inst.market || "angola";
     // Auto-resume if pause timer expired
     if (inst.automation_paused && inst.automation_paused_until && new Date(inst.automation_paused_until).getTime() <= Date.now()) {
       await admin.from("instances").update({ automation_paused: false, automation_paused_until: null }).eq("instance_name", instanceName);
@@ -122,7 +126,8 @@ Deno.serve(async (req) => {
         await admin.from("whatsapp_contacts").upsert(
           {
             user_id: userId,
-            market: "global",
+            workspace_id: inst.workspace_id,
+            market,
             instance_name: instanceName,
             phone_number: phoneNumber,
             name: pushName,
@@ -131,25 +136,66 @@ Deno.serve(async (req) => {
           { onConflict: "user_id,phone_number" },
         );
 
+        const { data: contact } = await admin
+          .from("whatsapp_contacts")
+          .select("id")
+          .eq("user_id", userId)
+          .eq("phone_number", phoneNumber)
+          .maybeSingle();
+        const { data: conversation } = await admin
+          .from("inbox_conversations")
+          .upsert({
+            user_id: userId,
+            workspace_id: inst.workspace_id,
+            phone_number: phoneNumber,
+            whatsapp_instance_name: instanceName,
+            contact_id: contact?.id || null,
+            market: "global",
+            last_message_at: new Date().toISOString(),
+            last_message_preview: text.substring(0, 240),
+            last_message_direction: "inbound",
+          }, { onConflict: "user_id,phone_number,market" })
+          .select("id,mode,status")
+          .single();
+
+        if (m?.key?.id) {
+          const { data: duplicate } = await admin
+            .from("messages")
+            .select("id")
+            .eq("whatsapp_instance_id", instanceName)
+            .eq("external_id", m.key.id)
+            .maybeSingle();
+          if (duplicate) continue;
+        }
+
         // Save inbound message immediately (for history regardless of automation)
-        await admin.from("messages").insert({
+        const { data: savedMessage } = await admin.from("messages").insert({
           user_id: userId,
-          market: "global",
+          workspace_id: inst.workspace_id,
+          conversation_id: conversation?.id || null,
+          market,
           phone_number: phoneNumber,
           message_text: text.substring(0, 4000),
           direction: "inbound",
+          sender_type: "customer",
+          message_type: kind,
+          status: "sent",
+          sent_at: new Date().toISOString(),
           kind,
           whatsapp_instance_id: instanceName,
           external_id: m?.key?.id || null,
-        });
+        }).select("id").single();
+        if (savedMessage?.id && conversation?.id) {
+          await admin.from("inbox_conversations").update({ last_message_id: savedMessage.id }).eq("id", conversation.id);
+        }
 
-        if (inst.automation_paused === true) continue;
+        if (inst.automation_paused === true || conversation?.mode === "human") continue;
 
         const { data: blocked } = await admin
           .from("blocked_contacts")
           .select("id")
           .eq("user_id", userId)
-          .eq("market", "global")
+          .eq("market", market)
           .eq("phone_number", phoneNumber)
           .eq("is_active", true)
           .maybeSingle();
@@ -159,7 +205,7 @@ Deno.serve(async (req) => {
           .from("whatsapp_contacts")
           .select("should_respond")
           .eq("user_id", userId)
-          .eq("market", "global")
+          .eq("market", market)
           .eq("phone_number", phoneNumber)
           .maybeSingle();
         if (contact?.should_respond === false) continue;
@@ -169,7 +215,7 @@ Deno.serve(async (req) => {
           .from("profiles")
           .select("messages_received, message_limit, business_name, business_description, ai_name, ai_rules")
           .eq("user_id", userId)
-          .eq("market", "global")
+          .eq("market", market)
           .maybeSingle();
         const limit = Number(profile?.message_limit || 0);
         const used = Number(profile?.messages_received || 0);
@@ -209,6 +255,7 @@ Deno.serve(async (req) => {
             customer_phone: phoneNumber,
             message_type: kind,
             message_id: m?.key?.id,
+            conversation_id: conversation?.id || null,
             user_id: userId,
             callback_url: `${SUPABASE_URL}/functions/v1/n8n-callback`,
             callback_secret: Deno.env.get("N8N_CALLBACK_SECRET") || "",
@@ -237,7 +284,7 @@ Deno.serve(async (req) => {
           .select("id")
           .single();
 
-        const sent = await dispatchToN8n({ ...payload, metadata: { ...payload.metadata, queue_id: queued?.id } });
+        const sent = await dispatchToN8n({ ...payload, metadata: { ...payload.metadata, market, queue_id: queued?.id } }, market);
         if (!sent && queued?.id) {
           await admin.from("message_queue").update({ status: "pending", last_error: "dispatch_failed" }).eq("id", queued.id);
         }

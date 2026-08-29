@@ -47,7 +47,7 @@ const getDateKey = (value: string | Date) => {
 };
 
 const formatDateLabel = (date: Date) =>
-  toAngolaDate(date).toLocaleDateString("pt-AO", {
+  toAngolaDate(date).toLocaleDateString("en-US", {
     weekday: "long",
     day: "2-digit",
     month: "long",
@@ -59,9 +59,9 @@ const formatTimeLabel = (value: string | null) =>
         hour: "2-digit",
         minute: "2-digit",
       })
-    : "Sem horário";
+    : "No time";
 
-const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 const statusStyles: Record<string, string> = {
   confirmed: "bg-emerald-100 text-emerald-800",
@@ -72,10 +72,10 @@ const statusStyles: Record<string, string> = {
 };
 
 const statusLabel: Record<string, string> = {
-  confirmed: "Confirmado",
-  pending: "Pendente",
-  canceled: "Cancelado",
-  completed: "Concluído",
+  confirmed: "Confirmed",
+  pending: "Pending",
+  canceled: "Canceled",
+  completed: "Completed",
 };
 
 export default function Schedule() {
@@ -225,28 +225,28 @@ export default function Schedule() {
 
   return (
     <DashboardShell
-      title="Minha Agenda"
-      description="Visualização de calendário com agendamentos e detalhes por dia."
+      title="Appointments"
+      description="Manage appointments and view your schedule in one place."
     >
       <div className="space-y-6">
         <Card className="rounded-3xl bg-transparent shadow-none border-none min-h-auto sm:border-border sm:bg-card/90 sm:shadow-sm sm:min-h-[620px]">
           <CardHeader className="hidden sm:block">
-            <CardTitle>Minha Agenda</CardTitle>
+            <CardTitle>Muwoyo Calendar</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-6 xl:grid-cols-[minmax(420px,1.1fr)_minmax(380px,0.9fr)]">
             <section className="space-y-6">
               <div className="rounded-none border-none bg-transparent p-0 sm:rounded-3xl sm:border sm:border-border sm:bg-slate-50 sm:p-5">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-sm uppercase tracking-[0.24em] text-slate-500">Calendário</p>
+                    <p className="text-sm uppercase tracking-[0.24em] text-slate-500">Calendar</p>
                     <h2 className="text-2xl font-semibold text-slate-900">{monthLabel}</h2>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <Button variant="outline" size="sm" onClick={() => setCalendarMonth((prev) => subMonths(prev, 1))}>
-                      Anterior
+                      Previous
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => setCalendarMonth((prev) => addMonths(prev, 1))}>
-                      Próximo
+                      Next
                     </Button>
                   </div>
                 </div>
@@ -254,7 +254,7 @@ export default function Schedule() {
                 <div className="mx-auto w-full max-w-[28rem] sm:rounded-3xl sm:bg-slate-50 sm:p-1">
                   <div className="mx-auto w-full">
                     <div className="grid grid-cols-7 gap-1 text-center text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-slate-500 sm:gap-2">
-                      {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map((day) => (
+                      {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
                         <div key={day} className="py-2">
                           {day}
                         </div>
@@ -286,7 +286,7 @@ export default function Schedule() {
                           <span className="text-base font-semibold leading-none">{format(date, 'd')}</span>
                           {todayFlag && (
                             <span className={`rounded-full px-2 py-0.5 text-[0.65rem] font-semibold ${selected ? 'bg-white/10 text-white/90' : 'bg-emerald-200 text-emerald-900'}`}>
-                              Hoje
+                              Today
                             </span>
                           )}
                         </div>
@@ -298,7 +298,7 @@ export default function Schedule() {
                           ) : (
                             <span>—</span>
                           )}
-                          <span className="text-xs uppercase tracking-[0.18em] text-slate-400">{isCurrentMonth ? null : 'fora'}</span>
+                          <span className="text-xs uppercase tracking-[0.18em] text-slate-400">{isCurrentMonth ? null : 'outside'}</span>
                         </div>
                       </button>
                     );
@@ -315,25 +315,25 @@ export default function Schedule() {
                   <div>
                     <p className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-slate-600">
                       <History className="h-4 w-4 text-slate-500" />
-                      Agenda rápida
+                      Quick Schedule
                     </p>
-                    <h3 className="mt-2 text-xl font-semibold text-slate-950">{selectedDate ? formatDateLabel(selectedDate) : 'Selecione uma data'}</h3>
+                    <h3 className="mt-2 text-xl font-semibold text-slate-950">{selectedDate ? formatDateLabel(selectedDate) : 'Select a date'}</h3>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold text-slate-900 shadow-sm">
                       {selectedDayAppointments.length} agendamento{selectedDayAppointments.length === 1 ? '' : 's'}
                     </span>
                     <Button variant="outline" size="sm" onClick={handleAllOpen}>
-                      Ver todos
+                      View All
                     </Button>
                     <Button variant="outline" size="sm" onClick={handleHistoryOpen}>
                       <History className="mr-2 h-4 w-4" />
-                      Histórico
+                      History
                     </Button>
                   </div>
                 </div>
                 <p className="mt-4 text-sm leading-6 text-slate-700">
-                  Clique em um dia no calendário para ver apenas os agendamentos desse dia.
+                  Click a day on the calendar to view appointments scheduled for that date.
                 </p>
               </div>
 
@@ -342,9 +342,9 @@ export default function Schedule() {
                       <div key={appt.id} className="rounded-3xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div className="space-y-2">
-                            <div className="text-base font-semibold text-slate-950">{appt.service || 'Agendamento'}</div>
+                            <div className="text-base font-semibold text-slate-950">{appt.service || 'Appointment'}</div>
                             <div className="text-sm font-medium text-slate-800">{formatDateLabel(new Date(appt.scheduled_at || ''))} • {formatTimeLabel(appt.scheduled_at)}</div>
-                            <div className="text-sm text-slate-700">{appt.customer_name || 'Cliente'}</div>
+                            <div className="text-sm text-slate-700">{appt.customer_name || 'Customer'}</div>
                           </div>
                           <span
                             className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
@@ -377,7 +377,7 @@ export default function Schedule() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-3xl w-full max-w-[calc(100vw-1.5rem)] mx-auto max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Agendamentos para {selectedDate ? formatDateLabel(selectedDate) : "data selecionada"}</DialogTitle>
+            <DialogTitle>Appointments for {selectedDate ? formatDateLabel(selectedDate) : "selected date"}</DialogTitle>
             <DialogDescription>
               {selectedDayAppointments.length} agendamento{selectedDayAppointments.length === 1 ? "" : "s"} neste dia.
             </DialogDescription>
@@ -395,7 +395,7 @@ export default function Schedule() {
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <div className="font-semibold text-slate-900">
-                          {appt.service || "Agendamento"}
+                          {appt.service || "Appointment"}
                         </div>
                         <div className="text-sm text-slate-700">
                           {appt.customer_name || "Cliente"}
@@ -457,7 +457,7 @@ export default function Schedule() {
               <div key={appt.id} className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <div className="text-base font-semibold text-slate-950">{appt.service || 'Agendamento'}</div>
+                    <div className="text-base font-semibold text-slate-950">{appt.service || 'Appointment'}</div>
                     <div className="text-sm font-medium text-slate-800">{formatDateLabel(new Date(appt.scheduled_at || ''))} • {formatTimeLabel(appt.scheduled_at)}</div>
                     <div className="text-sm text-slate-700">{appt.customer_name || 'Cliente'}</div>
                   </div>
@@ -479,7 +479,7 @@ export default function Schedule() {
       <Dialog open={historyModalOpen} onOpenChange={setHistoryModalOpen}>
         <DialogContent className="sm:max-w-3xl w-full max-w-[calc(100vw-1.5rem)] mx-auto max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Histórico de agendamentos</DialogTitle>
+            <DialogTitle>Appointment History</DialogTitle>
             <DialogDescription>{historyItems.length} agendamento{historyItems.length === 1 ? "" : "s"} recentes.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4">
@@ -487,7 +487,7 @@ export default function Schedule() {
               <div key={appt.id} className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <div className="text-base font-semibold text-slate-950">{appt.service || 'Agendamento'}</div>
+                    <div className="text-base font-semibold text-slate-950">{appt.service || 'Appointment'}</div>
                     <div className="text-sm font-medium text-slate-800">{formatDateLabel(new Date(appt.scheduled_at || ''))} • {formatTimeLabel(appt.scheduled_at)}</div>
                     <div className="text-sm text-slate-700">{appt.customer_name || 'Cliente'}</div>
                   </div>
@@ -498,7 +498,7 @@ export default function Schedule() {
                 {appt.description && <div className="mt-3 rounded-2xl bg-slate-950/5 p-4 text-sm text-slate-800">{appt.description}</div>}
               </div>
             ))}
-            {historyItems.length === 0 && <div className="rounded-3xl border border-dashed border-border p-8 text-center text-sm text-slate-500">Nenhum histórico encontrado.</div>}
+            {historyItems.length === 0 && <div className="rounded-3xl border border-dashed border-border p-8 text-center text-sm text-slate-500">No history found.</div>}
           </div>
           <div className="mt-6 flex justify-end gap-3">
             <Button variant="outline" onClick={() => setHistoryModalOpen(false)}>Fechar</Button>

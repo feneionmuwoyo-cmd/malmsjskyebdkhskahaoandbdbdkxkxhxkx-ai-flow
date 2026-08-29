@@ -6,11 +6,11 @@ type Dictionary = Record<string, string>;
 const dictionaries: Record<Language, Dictionary> = {
   en: {
     dashboard: "Dashboard", integrations: "Integrations", plans: "Plans & billing", language: "Language",
-    signIn: "Sign in", createAccount: "Create account", inbox: "Shared Inbox", connect: "Connect",
+    signIn: "Sign in", createAccount: "Create account", inbox: "Inbox", connect: "Connect",
   },
   pt: {
     dashboard: "Dashboard", integrations: "Integrações", plans: "Planos e faturação", language: "Idioma",
-    signIn: "Entrar", createAccount: "Criar conta", inbox: "Caixa partilhada", connect: "Ligar",
+    signIn: "Entrar", createAccount: "Criar conta", inbox: "Inbox", connect: "Ligar",
   },
 };
 

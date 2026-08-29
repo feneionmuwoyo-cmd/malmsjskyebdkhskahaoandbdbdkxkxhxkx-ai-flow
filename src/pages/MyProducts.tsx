@@ -108,10 +108,10 @@ export default function MyProducts() {
   const requireCategory = useMemo(() => form.category_ids.length === 0, [form.category_ids]);
 
   return (
-    <DashboardShell title="Meus Produtos" description="Cadastre, edite e gerencie todos os produtos da sua loja.">
+    <DashboardShell title="Products" description="Create, edit, and manage all products in your store.">
       <div className="flex items-center justify-between gap-3">
-        <div className="text-sm text-muted-foreground">{products.length} produto(s) cadastrado(s)</div>
-        <Button onClick={startCreate}><Plus className="mr-2 h-4 w-4" /> Novo produto</Button>
+        <div className="text-sm text-muted-foreground">{products.length} products</div>
+        <Button onClick={startCreate}><Plus className="mr-2 h-4 w-4" /> New Product</Button>
       </div>
 
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
@@ -119,7 +119,7 @@ export default function MyProducts() {
           <Card key={p.id} className={`overflow-hidden relative ${p.is_sold_out ? "opacity-80" : ""}`}>
             <div className="aspect-square bg-muted relative">
               {p.image_url && <img src={p.image_url} alt={p.name} className="h-full w-full object-cover" />}
-              {p.is_sold_out && <div className="absolute inset-0 flex items-center justify-center bg-destructive/80 text-destructive-foreground font-bold uppercase tracking-wider">Esgotado</div>}
+              {p.is_sold_out && <div className="absolute inset-0 flex items-center justify-center bg-destructive/80 text-destructive-foreground font-bold uppercase tracking-wider">Sold Out</div>}
             </div>
             <CardContent className="space-y-2 p-3">
               <div className="line-clamp-1 text-sm font-semibold">{p.name}</div>
@@ -147,16 +147,16 @@ export default function MyProducts() {
       </div>
       {products.length === 0 && (
         <Card><CardContent className="py-12 text-center text-muted-foreground">
-          Sem produtos ainda. Clique em "Novo produto" para começar.
+          No products yet. Click "New Product" to get started.
         </CardContent></Card>
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>{editing ? "Editar produto" : "Novo produto"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editing ? "Edit Product" : "New Product"}</DialogTitle></DialogHeader>
           <form onSubmit={save} className="space-y-3">
             <div className="space-y-1.5"><Label>Nome</Label><Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-            <div className="space-y-1.5"><Label>Descrição</Label><Textarea required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+            <div className="space-y-1.5"><Label>Description</Label><Textarea required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
             <div className="grid grid-cols-3 gap-2">
               <div className="space-y-1.5"><Label>Preço</Label><Input type="number" required value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></div>
               <div className="space-y-1.5"><Label>Desconto</Label><Input type="number" value={form.discount_price} onChange={(e) => setForm({ ...form, discount_price: e.target.value })} /></div>
@@ -164,7 +164,7 @@ export default function MyProducts() {
             </div>
 
             <div className="space-y-2 rounded-md border p-3">
-              <Label>Categorias <span className="text-destructive">*</span></Label>
+              <Label>Categories <span className="text-destructive">*</span></Label>
               <div className="flex flex-wrap gap-1.5">
                 {categories.map((c) => {
                   const active = form.category_ids.includes(c.id);
@@ -176,17 +176,17 @@ export default function MyProducts() {
                     </button>
                   );
                 })}
-                {categories.length === 0 && <span className="text-xs text-muted-foreground">Nenhuma categoria. Crie a primeira abaixo.</span>}
+                {categories.length === 0 && <span className="text-xs text-muted-foreground">No categories yet. Create the first one below.</span>}
               </div>
               <div className="flex gap-2">
-                <Input placeholder="Nova categoria…" value={newCat} onChange={(e) => setNewCat(e.target.value)} className="h-9" />
-                <Button type="button" size="sm" variant="outline" onClick={addCategory}>Adicionar</Button>
+                <Input placeholder="New category..." value={newCat} onChange={(e) => setNewCat(e.target.value)} className="h-9" />
+                <Button type="button" size="sm" variant="outline" onClick={addCategory}>Add</Button>
               </div>
-              {requireCategory && <p className="text-xs text-destructive">Selecione ou crie pelo menos uma categoria.</p>}
+              {requireCategory && <p className="text-xs text-destructive">Select or create at least one category.</p>}
             </div>
 
             <div className="space-y-1.5">
-              <Label>Imagem</Label>
+              <Label>Image</Label>
               <Input type="file" accept="image/*" onChange={async (e) => { const f = e.target.files?.[0]; if (f) setForm({ ...form, image_url: (await uploadImage(f)) || "" }); }} />
               {form.image_url && (
                 <div className="relative inline-block">
@@ -198,10 +198,10 @@ export default function MyProducts() {
 
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={form.is_sold_out} onChange={(e) => setForm({ ...form, is_sold_out: e.target.checked })} />
-              Marcar como esgotado
+              Mark as sold out
             </label>
 
-            <Button className="w-full" disabled={busy || requireCategory}>{busy ? "A guardar…" : editing ? "Guardar alterações" : "Cadastrar produto"}</Button>
+            <Button className="w-full" disabled={busy || requireCategory}>{busy ? "Saving..." : editing ? "Save Changes" : "Create Product"}</Button>
           </form>
         </DialogContent>
       </Dialog>

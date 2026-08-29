@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import logo from "@/assets/muwoyo-logo.png";
+import { GLOBAL_MARKET } from "@/lib/market";
 
 /**
  * Wraps protected pages and shows a blocking modal when the user has 0 messages remaining.
@@ -21,6 +22,7 @@ export default function CreditGate({
   const [blocked, setBlocked] = useState(false);
   const [accountStatus, setAccountStatus] = useState("active");
   const [checked, setChecked] = useState(false);
+  const isAngolaPortal = import.meta.env.VITE_MARKET !== GLOBAL_MARKET;
 
   const check = async () => {
     if (!user) return;
@@ -36,12 +38,12 @@ export default function CreditGate({
     const remaining =
       Number(data?.message_limit || 0) - Number(data?.messages_received || 0);
     setAccountStatus(data?.account_status || "active");
-    setBlocked(
+    setBlocked(isAngolaPortal && (
       data?.account_status === "inactive" ||
-        (remaining <= 0 &&
-          Number(data?.message_limit || 0) > 0 &&
-          ["active", "trial"].includes(data?.account_status || "")),
-    );
+      (remaining <= 0 &&
+        Number(data?.message_limit || 0) > 0 &&
+        ["active", "trial"].includes(data?.account_status || ""))
+    ));
     setChecked(true);
   };
 
@@ -64,7 +66,7 @@ export default function CreditGate({
     return () => {
       supabase.removeChannel(ch);
     };
-  }, [user]);
+  }, [isAngolaPortal, user]);
 
   if (!checked) return <>{children}</>;
   return (

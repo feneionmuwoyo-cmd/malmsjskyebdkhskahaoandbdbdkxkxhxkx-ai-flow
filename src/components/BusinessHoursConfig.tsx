@@ -25,13 +25,13 @@ type DaySchedule = {
 type BusinessHours = Record<DayKey, DaySchedule>;
 
 const weekDays: { key: DayKey; label: string }[] = [
-  { key: "monday", label: "Segunda-feira" },
-  { key: "tuesday", label: "Terça-feira" },
-  { key: "wednesday", label: "Quarta-feira" },
-  { key: "thursday", label: "Quinta-feira" },
-  { key: "friday", label: "Sexta-feira" },
-  { key: "saturday", label: "Sábado" },
-  { key: "sunday", label: "Domingo" },
+  { key: "monday", label: "Monday" },
+  { key: "tuesday", label: "Tuesday" },
+  { key: "wednesday", label: "Wednesday" },
+  { key: "thursday", label: "Thursday" },
+  { key: "friday", label: "Friday" },
+  { key: "saturday", label: "Saturday" },
+  { key: "sunday", label: "Sunday" },
 ];
 
 const defaultBusinessHours: BusinessHours = weekDays.reduce(
@@ -133,12 +133,12 @@ export default function BusinessHoursConfig({ value, onChange }: Props) {
   return (
     <Card className="border-border/60 shadow-sm">
       <CardHeader>
-        <CardTitle>Horários de funcionamento</CardTitle>
+        <CardTitle>Business Hours</CardTitle>
       </CardHeader>
       <CardContent>
           <div className="space-y-5">
             <p className="text-sm text-muted-foreground">
-              Ajuste o horário padrão e personalize apenas quando necessário.
+              Set your default schedule and customize individual days only when needed.
             </p>
 
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -164,7 +164,7 @@ export default function BusinessHoursConfig({ value, onChange }: Props) {
 
             <div className="grid gap-3 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Hora de início padrão (24h)</Label>
+                <Label>Default Start Time (24h)</Label>
                 <div className="flex items-center gap-1">
                   <Input
                     type="number"
@@ -206,10 +206,10 @@ export default function BusinessHoursConfig({ value, onChange }: Props) {
                     className="w-16"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">Hora aplicada a todos os dias selecionados.</p>
+                <p className="text-xs text-muted-foreground">This time will be applied to all selected days.</p>
               </div>
               <div className="space-y-2">
-                <Label>Hora de término padrão (24h)</Label>
+                <Label>Default End Time (24h)</Label>
                 <div className="flex items-center gap-1">
                   <Input
                     type="number"
@@ -251,7 +251,7 @@ export default function BusinessHoursConfig({ value, onChange }: Props) {
                     className="w-16"
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">Hora aplicada a todos os dias selecionados.</p>
+                <p className="text-xs text-muted-foreground">This time will be applied to all selected days.</p>
               </div>
             </div>
 
@@ -261,10 +261,10 @@ export default function BusinessHoursConfig({ value, onChange }: Props) {
                 setCommonTimeInputs(nextHours);
                 commitBusinessHours();
               }}>
-                Aplicar horário
+                Apply Schedule
               </Button>
               <Button onClick={() => setCustomOpen(true)}>
-                Personalizar horários
+                Customize Schedule
               </Button>
             </div>
 

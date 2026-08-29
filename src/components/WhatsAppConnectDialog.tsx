@@ -26,12 +26,9 @@ import logo from "@/assets/muwoyo-logo.png";
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConnected: () => void;
+  onConnected: (instanceName: string) => void;
 }
 type Step = "choose" | "phone-pairing" | "qr" | "pairing";
-const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-const generateInstanceName = () =>
-  `Muwoyo_${Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("")}`;
 
 export default function WhatsAppConnectDialog({
   open,
@@ -71,17 +68,19 @@ export default function WhatsAppConnectDialog({
     };
   }, [open]);
 
-  const getOrCreateInstanceName = async () => {
-    if (!user) return generateInstanceName();
-    const { data } = await supabase
-      .from("instances")
-      .select("instance_name")
-      .eq("user_id", user.id)
-      .eq("market", "global")
-      .maybeSingle();
-    const existing = data?.instance_name;
-    if (existing) return existing;
-    return generateInstanceName();
+  const completeConnection = async (connectedInstanceName: string) => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+    await Promise.allSettled([
+      supabase.functions.invoke("evolution-api", { body: { action: "fetchInfo", instanceName: connectedInstanceName } }),
+      supabase.functions.invoke("evolution-api", { body: { action: "importContacts", instanceName: connectedInstanceName } }),
+      supabase.functions.invoke("evolution-api", { body: { action: "getStatus", instanceName: connectedInstanceName } }),
+    ]);
+    toast({ title: "Conectado!", description: "WhatsApp conectado e sincronização iniciada." });
+    onConnected(connectedInstanceName);
+    onOpenChange(false);
   };
 
   const startPolling = (name: string) => {
@@ -93,23 +92,7 @@ export default function WhatsAppConnectDialog({
           { body: { action: "getStatus", instanceName: name } },
         );
         if (!error && data?.state === "open") {
-          if (pollRef.current) {
-            clearInterval(pollRef.current);
-            pollRef.current = null;
-          }
-          try {
-            await supabase.functions.invoke("evolution-api", {
-              body: { action: "fetchInfo", instanceName: name },
-            });
-            toast({
-              title: "Conectado!",
-              description: "WhatsApp conectado com sucesso.",
-            });
-            onConnected();
-            onOpenChange(false);
-          } catch (fetchError) {
-            console.warn("Function fetchInfo not available:", fetchError);
-          }
+          await completeConnection(name);
         }
       } catch (error) {
         console.warn("Function getStatus not available:", error);
@@ -123,11 +106,9 @@ export default function WhatsAppConnectDialog({
 
   const handleQR = async () => {
     setLoading(true);
-    const name = await getOrCreateInstanceName();
-    setInstanceName(name);
     try {
       const { data, error } = await supabase.functions.invoke("evolution-api", {
-        body: { action: "createAndConnect", instanceName: name },
+        body: { action: "createAndConnect" },
       });
       setLoading(false);
       if (error || !data) {
@@ -142,12 +123,7 @@ export default function WhatsAppConnectDialog({
         });
       }
       if (data.connected || data.state === "open") {
-        toast({
-          title: "Conectado!",
-          description: "WhatsApp conectado com sucesso.",
-        });
-        onConnected();
-        onOpenChange(false);
+        await completeConnection(data.instanceName);
         return;
       }
       if (!data.qrBase64 && !data.qrCodeText)
@@ -159,7 +135,7 @@ export default function WhatsAppConnectDialog({
       setQrBase64(data.qrBase64 || null);
       setQrText(data.qrCodeText || null);
       setStep("qr");
-      startPolling(name);
+      startPolling(data.instanceName);
     } catch (error) {
       setLoading(false);
       console.warn("Function call failed:", error);
@@ -180,25 +156,17 @@ export default function WhatsAppConnectDialog({
         variant: "destructive",
       });
     setLoading(true);
-    const name = await getOrCreateInstanceName();
-    setInstanceName(name);
     try {
       const { data, error } = await supabase.functions.invoke("evolution-api", {
         body: {
           action: "getPairingCode",
           phone: cleanPhone,
-          instanceName: name,
         },
       });
       setLoading(false);
       if (error || !data?.pairingCode) {
         if (data?.connected || data?.state === "open") {
-          toast({
-            title: "Conectado!",
-            description: "WhatsApp conectado com sucesso.",
-          });
-          onConnected();
-          onOpenChange(false);
+          await completeConnection(data.instanceName);
           return;
         }
         console.warn(
@@ -213,7 +181,7 @@ export default function WhatsAppConnectDialog({
       }
       setPairingCode(data.pairingCode);
       setStep("pairing");
-      startPolling(name);
+      startPolling(data.instanceName);
     } catch (error) {
       setLoading(false);
       console.warn("Function call failed:", error);

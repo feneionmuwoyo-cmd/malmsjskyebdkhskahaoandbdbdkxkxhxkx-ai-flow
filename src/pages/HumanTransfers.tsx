@@ -64,17 +64,17 @@ export default function HumanTransfers() {
   };
 
   return (
-    <DashboardShell title="Transferido para humano" description="Acompanhe clientes em transferência e abra o WhatsApp rapidamente.">
+    <DashboardShell title="Human Handover" description="Manage conversations transferred from AI to your team.">
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="border-border/60 shadow-sm">
           <CardContent className="p-4">
-            <div className="text-sm text-muted-foreground">Ativos</div>
+            <div className="text-sm text-muted-foreground">Active</div>
             <div className="mt-2 text-2xl font-bold text-emerald-600">{statusSummary.on}</div>
           </CardContent>
         </Card>
         <Card className="border-border/60 shadow-sm">
           <CardContent className="p-4">
-            <div className="text-sm text-muted-foreground">Em espera</div>
+            <div className="text-sm text-muted-foreground">Waiting</div>
             <div className="mt-2 text-2xl font-bold text-amber-600">{statusSummary.off}</div>
           </CardContent>
         </Card>
@@ -88,16 +88,16 @@ export default function HumanTransfers() {
 
       <Card className="border-border/60 shadow-sm">
         <CardHeader className="flex items-center justify-between">
-          <CardTitle>Lista de transferidos</CardTitle>
+          <CardTitle>Handover List</CardTitle>
           <Button variant="outline" size="sm" onClick={() => void load()}>
-            Atualizar
+            Refresh
           </Button>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="text-sm text-muted-foreground">A carregar transferências…</div>
           ) : rows.length === 0 ? (
-            <div className="text-sm text-muted-foreground">Nenhum cliente transferido para humano até agora.</div>
+            <div className="text-sm text-muted-foreground">No conversations have been transferred to a human yet.</div>
           ) : (
             <Accordion type="single" collapsible className="space-y-2">
               {rows.map((row) => (

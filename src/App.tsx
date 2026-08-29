@@ -36,7 +36,7 @@ import { TermsOfUse } from "./pages/TermsOfUse";
 import { PrivacyPolicyViewer } from "./pages/PrivacyPolicyViewer";
 import { TermsOfUseViewer } from "./pages/TermsOfUseViewer";
 import PwaLaunchGate from "./components/PwaLaunchGate";
-import { LanguageProvider } from "./hooks/useLanguage";
+import { LanguageProvider } from "@/hooks/useLanguage";
 import GlobalPlans from "./pages/GlobalPlans";
 import Integrations from "./pages/Integrations";
 import GlobalInbox from "./pages/GlobalInbox";

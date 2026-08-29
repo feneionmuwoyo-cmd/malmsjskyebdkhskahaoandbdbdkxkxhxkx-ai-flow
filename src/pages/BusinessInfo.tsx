@@ -157,16 +157,16 @@ export default function BusinessInfo() {
   };
 
   return (
-    <DashboardShell title="Informações do negócio" description="Configure o perfil e as regras que a IA deve seguir.">
+    <DashboardShell title="Business Information" description="Configure your business profile and the rules your AI should follow.">
       <Card className="border-border/60 shadow-sm">
         <CardHeader>
-          <CardTitle>Dados da empresa e agente IA</CardTitle>
+          <CardTitle>Business and AI Agent Details</CardTitle>
         </CardHeader>
         <CardContent>
           <form className="grid gap-5">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Nome da empresa</Label>
+                <Label>Business Name</Label>
                 <Input
                   value={form.business_name}
                   onChange={(e) => setForm({ ...form, business_name: e.target.value })}
@@ -174,7 +174,7 @@ export default function BusinessInfo() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Nome do agente de IA</Label>
+                <Label>AI Agent Name</Label>
                 <Input
                   value={form.ai_name}
                   onChange={(e) => setForm({ ...form, ai_name: e.target.value })}
@@ -184,7 +184,7 @@ export default function BusinessInfo() {
             </div>
 
             <div className="space-y-2">
-              <Label>Número para transferir para atendimento humano</Label>
+              <Label>Human Handover Phone Number</Label>
               <Input
                 value={form.transfer_phone}
                 onChange={(e) => setForm({ ...form, transfer_phone: e.target.value })}
@@ -194,7 +194,7 @@ export default function BusinessInfo() {
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Duração do intervalo de cada agendamento (minutos)</Label>
+                <Label>Appointment Interval Duration (minutes)</Label>
                 <Input
                   type="number"
                   min={10}
@@ -207,8 +207,8 @@ export default function BusinessInfo() {
               <div className="space-y-2 pt-6">
                 <div className="flex items-center justify-between rounded-md border p-3">
                   <div>
-                    <Label className="text-sm font-medium">Aceita agendamentos</Label>
-                    <p className="text-xs text-muted-foreground">Ative ou desative o recebimento de agendamentos</p>
+                    <Label className="text-sm font-medium">Accept Appointments</Label>
+                    <p className="text-xs text-muted-foreground">Enable or disable appointment bookings.</p>
                   </div>
                   <Switch
                     checked={form.accepts_appointments}
@@ -218,7 +218,7 @@ export default function BusinessInfo() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Personalidade da inteligência artificial</Label>
+              <Label>AI Personality</Label>
               <Textarea
                 className="min-h-28"
                 value={form.ai_personality}
@@ -227,7 +227,7 @@ export default function BusinessInfo() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Informações completas da empresa</Label>
+              <Label>Complete Business Information</Label>
               <Textarea
                 className="min-h-36"
                 value={form.business_description}
@@ -236,7 +236,7 @@ export default function BusinessInfo() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Regras que a IA deve seguir</Label>
+              <Label>Rules the AI Must Follow</Label>
               <Textarea
                 className="min-h-36"
                 value={form.ai_rules}
@@ -260,7 +260,7 @@ export default function BusinessInfo() {
           disabled={saving}
           className="w-fit"
         >
-          {saving ? "A guardar..." : "Guardar"}
+          {saving ? "Saving..." : "Save Changes"}
         </Button>
       </div>
     </DashboardShell>

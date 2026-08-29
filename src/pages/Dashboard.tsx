@@ -50,6 +50,8 @@ export default function Dashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [accountStatus, setAccountStatus] = useState("trial");
   const [firstLoginOpen, setFirstLoginOpen] = useState(false);
+  const isGlobalPortal = import.meta.env.VITE_MARKET === GLOBAL_MARKET;
+  const currentMarket = import.meta.env.VITE_MARKET || GLOBAL_MARKET;
 
   const pausedUntilDate = instance?.automation_paused_until
     ? new Date(instance.automation_paused_until)
@@ -67,43 +69,64 @@ export default function Dashboard() {
     setRefreshing(true);
     const start = new Date();
     start.setHours(0, 0, 0, 0);
-    const [{ data: inst }, { data: prof }, { count }] = await Promise.all([
+    const [{ data: instanceRows }, { data: prof }, { count }] = await Promise.all([
       supabase
         .from("instances")
         .select(
           "instance_name, connection_state, phone, phone_number, automation_paused, automation_paused_until, status",
         )
         .eq("user_id", user.id)
-        .eq("market", GLOBAL_MARKET)
-        .maybeSingle(),
+        .eq("market", currentMarket)
+        .order("created_at", { ascending: true })
+        .limit(1),
       supabase
         .from("profiles")
         .select("messages_received, message_limit, account_status")
         .eq("user_id", user.id)
-        .eq("market", GLOBAL_MARKET)
+        .eq("market", currentMarket)
         .maybeSingle(),
       supabase
         .from("messages")
         .select("id", { count: "exact", head: true })
         .eq("user_id", user.id)
-        .eq("market", GLOBAL_MARKET)
+        .eq("market", currentMarket)
         .eq("direction", "inbound")
         .gte("created_at", start.toISOString()),
     ]);
-    setInstance((inst as any) ?? null);
+    setInstance((instanceRows?.[0] as any) ?? null);
     if (prof) {
       setMessagesReceived(prof.messages_received ?? 0);
       setMessageLimit(prof.message_limit ?? 0);
       setAccountStatus(prof.account_status ?? "trial");
     }
-    if (typeof window !== "undefined" && !window.localStorage.getItem(`muwoyo-first-login-${user.id}`)) setFirstLoginOpen(true);
+    if (isGlobalPortal && typeof window !== "undefined" && !window.localStorage.getItem(`muwoyo-first-login-${user.id}`)) setFirstLoginOpen(true);
     setMessagesToday(count ?? 0);
     setRefreshing(false);
-  }, [user]);
+  }, [currentMarket, isGlobalPortal, user]);
 
   useEffect(() => {
     loadAll();
   }, [loadAll]);
+
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`dashboard-instance-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "instances",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => void loadAll(),
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [loadAll, user]);
 
   const handleDisconnect = async () => {
     setDisconnecting(true);
@@ -120,14 +143,14 @@ export default function Dashboard() {
           variant: "destructive",
         });
       }
-      toast({ title: "Desconectado" });
+      toast({ title: "Disconnected" });
       loadAll();
     } catch (error) {
       setDisconnecting(false);
       console.warn("Function call failed:", error);
       toast({
-        title: "Erro",
-        description: "Erro ao conectar com o servidor",
+        title: "Error",
+        description: "Unable to connect to the server",
         variant: "destructive",
       });
     }
@@ -144,11 +167,11 @@ export default function Dashboard() {
       .from("instances")
       .update(patch)
       .eq("user_id", user.id)
-      .eq("market", GLOBAL_MARKET);
+      .eq("market", currentMarket);
     setSavingPause(false);
     if (error)
       return toast({
-        title: "Erro",
+        title: "Error",
         description: error.message,
         variant: "destructive",
       });
@@ -156,8 +179,8 @@ export default function Dashboard() {
       title: paused
         ? untilMinutes
           ? `Pausada por ${untilMinutes} min`
-          : "Pausada"
-        : "Reativada",
+          : "Paused"
+        : "Resumed",
     });
     setPauseOpen(false);
     loadAll();
@@ -168,28 +191,28 @@ export default function Dashboard() {
   const automationStatus = !isConnected
     ? "Offline"
     : isPaused
-      ? "Pausada"
+      ? "Paused"
       : remaining > 0
         ? "Online"
-        : "Sem saldo";
+        : "Out of credits";
 
   return (
     <DashboardShell
-      title="Painel de Automação"
-      description="Gerencie suas automações e acompanhe conversas."
+      title="Dashboard"
+      description="Monitor your automation and business activity in one place."
       accountStatus={accountStatus}
     >
-      {accountStatus !== "active" && (
+      {!isGlobalPortal && accountStatus !== "active" && (
         <div className="flex justify-end">
-          <Button size="sm" variant="outline" onClick={() => navigate("/recargas")}>Ativar conta</Button>
+          <Button size="sm" variant="outline" onClick={() => navigate("/recargas")}>Activate Account</Button>
         </div>
       )}
 
-      {accountStatus === "trial" && remaining <= 10 && remaining > 0 && (
-        <p className="text-sm text-amber-700">Você tem apenas {remaining} mensagens de teste restantes.</p>
+      {!isGlobalPortal && accountStatus === "trial" && remaining <= 10 && remaining > 0 && (
+        <p className="text-sm text-amber-700">You have only {remaining} trial messages remaining.</p>
       )}
-      {accountStatus === "trial" && remaining <= 0 && (
-        <p className="text-sm text-destructive">Seu período de teste terminou. Ative a sua conta para continuar.</p>
+      {!isGlobalPortal && accountStatus === "trial" && remaining <= 0 && (
+        <p className="text-sm text-destructive">Your trial has ended. Activate your account to continue.</p>
       )}
       {/* AUTOMATION CARD - soft emerald */}
       {!isConnected ? (
@@ -201,11 +224,11 @@ export default function Dashboard() {
               </div>
               <div>
                 <div className="text-xs font-semibold uppercase tracking-wider opacity-80">
-                  Desconectado
+                  Disconnected
                 </div>
-                <div className="text-xl font-bold">Conecte o seu WhatsApp</div>
+                <div className="text-xl font-bold">Connect your WhatsApp</div>
                 <p className="text-sm opacity-80">
-                  Comece a automatizar agora.
+                  Connect your WhatsApp number to start automating conversations.
                 </p>
               </div>
             </div>
@@ -224,7 +247,7 @@ export default function Dashboard() {
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider opacity-80">
                 <Wifi className="h-3.5 w-3.5" />
-                {isPaused ? "Pausada" : "Conectado"}
+                  {isPaused ? "Paused" : "Connected"}
               </div>
               <div className="flex items-center gap-2 text-xl font-bold">
                 {instance?.instance_name}
@@ -250,7 +273,7 @@ export default function Dashboard() {
                 ) : (
                   <Pause className="h-4 w-4" />
                 )}{" "}
-                {isPaused ? "Reativar" : "Pausar"}
+                {isPaused ? "Resume" : "Pause"}
               </Button>
               <Button
                 size="sm"
@@ -260,7 +283,7 @@ export default function Dashboard() {
                 className="gap-2"
               >
                 <Power className="h-4 w-4" />{" "}
-                {disconnecting ? "..." : "Desconectar"}
+                {disconnecting ? "..." : "Disconnect"}
               </Button>
             </div>
           </CardContent>
@@ -272,7 +295,7 @@ export default function Dashboard() {
         <Card className="border-dashed">
           <CardContent className="space-y-3 p-4">
             <div className="flex items-center gap-2 text-sm font-semibold">
-              <Clock className="h-4 w-4" /> Pausar automação
+              <Clock className="h-4 w-4" /> Pause automation
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {[15, 30, 60, 240].map((m) => (
@@ -301,7 +324,7 @@ export default function Dashboard() {
                 className="col-span-2 sm:col-span-2"
                 onClick={() => setPauseOpen(false)}
               >
-                Cancelar
+                Cancel
               </Button>
             </div>
             {pausedUntilActive && (
@@ -317,26 +340,26 @@ export default function Dashboard() {
       {/* STATS - 2 cols mobile, 4 cols desktop, polished */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
         <StatCard
-          label="Mensagens hoje"
+          label="Messages Today"
           value={messagesToday}
-          bottom="Diretas recebidas"
+          bottom="Direct Messages Received"
           icon={<MessageCircle className="h-4 w-4" />}
           accent
         />
         <StatCard
-          label="Restantes"
+          label="Messages Remaining"
           value={remaining}
           bottom={`de ${messageLimit}`}
           icon={<MessageCircle className="h-4 w-4" />}
         />
         <StatCard
-          label="Total enviadas"
+          label="Total Messages Sent"
           value={messagesReceived}
-          bottom="Histórico geral"
+          bottom="Overall History"
           icon={<Users className="h-4 w-4" />}
         />
         <StatCard
-          label="Automação"
+          label="Automation"
           value={
             <span
               className={
@@ -348,7 +371,7 @@ export default function Dashboard() {
               {automationStatus}
             </span>
           }
-          bottom="Status atual"
+          bottom="Current Status"
           icon={<Bot className="h-4 w-4" />}
         />
       </div>
@@ -372,11 +395,23 @@ export default function Dashboard() {
       <WhatsAppConnectDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        onConnected={() => loadAll()}
+        onConnected={(connectedInstanceName) => {
+          setInstance((current) =>
+            current
+              ? {
+                  ...current,
+                  instance_name: connectedInstanceName,
+                  connection_state: "connected",
+                  status: "connected",
+                }
+              : current,
+          );
+          void loadAll();
+        }}
       />
-      <Dialog open={firstLoginOpen} onOpenChange={(open) => { setFirstLoginOpen(open); if (!open) window.localStorage.setItem(`muwoyo-first-login-${user.id}`, "1"); }}>
+      {isGlobalPortal && <Dialog open={firstLoginOpen} onOpenChange={(open) => { setFirstLoginOpen(open); if (!open) window.localStorage.setItem(`muwoyo-first-login-${user.id}`, "1"); }}>
         <DialogContent className="max-w-md"><DialogHeader><DialogTitle>Bem-vindo à Muwoyo</DialogTitle></DialogHeader><div className="space-y-3 text-sm text-muted-foreground"><p>A sua conta está em período de teste com 50 mensagens gratuitas.</p><p>O trial começa agora e continua até o saldo terminar. Depois, ative a conta para continuar a automatizar o atendimento.</p><Button className="w-full" onClick={() => { setFirstLoginOpen(false); window.localStorage.setItem(`muwoyo-first-login-${user.id}`, "1"); }}>Entendi</Button></div></DialogContent>
-      </Dialog>
+      </Dialog>}
     </DashboardShell>
   );
 }

@@ -10,7 +10,7 @@ const translations: Record<string, string> = {
   "Minha Loja": "My store", "Tutorial": "Tutorial", "Recarregar mensagens": "Top up messages",
   "Transferido para humano": "Human handover", "Ativos": "Active", "Em espera": "Waiting",
   "Total": "Total", "Lista de transferidos": "Handover list", "Nenhum cliente transferido para humano até agora.": "No customers have been handed over yet.",
-  "Planos e faturação": "Plans & billing", "Integrações": "Integrations", "Caixa partilhada": "Shared Inbox",
+  "Planos e faturação": "Plans & billing", "Integrações": "Integrations", "Caixa partilhada": "Inbox",
   "Idioma": "Language", "Ligar": "Connect", "Conversations": "Conversations",
   "AI ON": "AI ON", "HUMAN MODE": "HUMAN MODE", "Enviar": "Send", "Fechar": "Close",
   "Aceitar": "Accept", "Cancelar": "Cancel", "Guardar": "Save", "Adicionar": "Add",

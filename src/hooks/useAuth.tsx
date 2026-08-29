@@ -19,6 +19,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const clearInvalidSession = async () => {
+    try {
+      await supabase.auth.signOut({ scope: "local" });
+    } catch (error) {
+      console.warn("Não foi possível limpar a sessão local do Supabase:", error);
+      if (typeof window !== "undefined") {
+        Object.keys(window.localStorage)
+          .filter((key) => key.startsWith("sb-") && key.endsWith("-auth-token"))
+          .forEach((key) => window.localStorage.removeItem(key));
+      }
+    } finally {
+      setSession(null);
+      setUser(null);
+    }
+  };
+
   useEffect(() => {
     if (!isSupabaseConfigured) {
       setLoading(false);
@@ -28,12 +44,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(s);
       setUser(s?.user ?? null);
     });
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (error) throw error;
       setSession(data.session);
       setUser(data.session?.user ?? null);
       setLoading(false);
     }).catch((error) => {
-      console.error("Erro ao recuperar a sessão do Supabase:", error);
+      console.warn("Sessão Supabase inválida; limpando sessão local:", error);
+      void clearInvalidSession();
       setLoading(false);
     });
     return () => sub.subscription.unsubscribe();

@@ -49,6 +49,12 @@ Deno.serve(async (req) => {
 
     if (!userId || !instanceName || !phoneNumber) return json({ error: "missing_fields" }, 400);
 
+    const conversationQuery = body.conversation_id
+      ? admin.from("inbox_conversations").select("id,workspace_id,mode,phone_number").eq("id", body.conversation_id).eq("user_id", userId).maybeSingle()
+      : admin.from("inbox_conversations").select("id,workspace_id,mode,phone_number").eq("user_id", userId).eq("phone_number", phoneNumber).maybeSingle();
+    const { data: conversation } = await conversationQuery;
+    if (!conversation || conversation.mode !== "ai") return json({ ok: true, skipped: "human_mode" });
+
     if (body.external_message_id) {
       const { data: duplicate } = await admin.from("messages").select("id").eq("external_id", body.external_message_id).eq("direction", "outbound").maybeSingle();
       if (duplicate) return json({ ok: true, duplicate: true });
@@ -57,14 +63,25 @@ Deno.serve(async (req) => {
     // Save outbound message(s)
     await admin.from("messages").insert({
       user_id: userId,
+      workspace_id: conversation.workspace_id,
+      conversation_id: conversation.id,
       phone_number: phoneNumber,
       message_text: sentText.substring(0, 4000),
       direction: "outbound",
+      sender_type: "ai",
+      message_type: "text",
+      status: "sent",
+      sent_at: new Date().toISOString(),
       kind: "text",
       whatsapp_instance_id: instanceName,
       external_id: body.external_message_id || null,
       ai_responded: true,
     });
+    await admin.from("inbox_conversations").update({
+      last_message_at: new Date().toISOString(),
+      last_message_preview: sentText.substring(0, 240),
+      last_message_direction: "outbound",
+    }).eq("id", conversation.id);
 
     const aiModelId = body.model_id as string | undefined;
     const promptTokens = Math.max(0, Number(body.prompt_tokens || 0));
